@@ -8,10 +8,10 @@ def load_data(file_path):
         df = pd.read_csv(file_path)
         return df
     except FileNotFoundError:
-        print(f"Error: File not found at {file_path}")
+        st.error(f"Error: File not found at {file_path}")
         return None
     except Exception as e:
-        print(f"Error loading data: {e}")
+        st.error(f"Error loading data: {e}")
         return None
 
 def preprocess_data(df):
@@ -27,16 +27,16 @@ def preprocess_data(df):
                           'speechiness', 'acousticness', 'instrumentalness',
                           'liveness', 'valence', 'tempo']
         if not all(feature in df.columns for feature in feature_list):
-            print("Error: Not all required features are present in the DataFrame.")
+            st.error("Error: Not all required features are present in the DataFrame.")
             return None
 
         df_features = df[feature_list]
         return df, df_features
     except KeyError as e:
-        print(f"Error: Key not found in DataFrame: {e}")
+        st.error(f"Error: Key not found in DataFrame: {e}")
         return None
     except Exception as e:
-        print(f"Error preprocessing data: {e}")
+        st.error(f"Error preprocessing data: {e}")
         return None
 
 def calculate_similarity(df_features):
@@ -44,13 +44,13 @@ def calculate_similarity(df_features):
         similarity_matrix = cosine_similarity(df_features)
         return similarity_matrix
     except Exception as e:
-        print(f"Error calculating similarity: {e}")
+        st.error(f"Error calculating similarity: {e}")
         return None
 
 def recommend_songs(song_name, artist_name, df, similarity_matrix, num_recommendations=10):
     try:
         processed_song_name = song_name.lower()
-        processed_artist_name = artist_name.lower()
+        processed_artist_name = artist_name.lower() if artist_name else ""
 
         if artist_name:
             comparison_result = (df['song'].str.lower().str.contains(processed_song_name)) & (
@@ -62,16 +62,13 @@ def recommend_songs(song_name, artist_name, df, similarity_matrix, num_recommend
         matching_songs = df[comparison_result]
 
         if matching_songs.empty:
-            print(f"Song '{song_name}' by '{artist_name}' not found in the dataset.")
+            st.warning(f"Song '{song_name}' by '{artist_name}' not found in the dataset.")
             return None
 
         # If multiple matches, use the first one.
         selected_song_index = matching_songs.index[0]
         selected_song = matching_songs.iloc[0]['song']
         selected_artist = matching_songs.iloc[0]['artist']
-
-        print(f"Selected Song Index: {selected_song_index}")  # Debugging
-        print(f"Similarity Matrix Shape: {similarity_matrix.shape}")  # Debugging
 
         # Get the similarity scores for the song
         similarity_scores = similarity_matrix[selected_song_index]
@@ -86,39 +83,42 @@ def recommend_songs(song_name, artist_name, df, similarity_matrix, num_recommend
         top_n_indices = similar_song_indices[:num_recommendations]
         recommended_songs = df.iloc[top_n_indices]['song'].tolist()
         recommended_artists = df.iloc[top_n_indices]['artist'].tolist()
-        return selected_song, selected_artist, list(zip(recommended_songs, recommended_artists))  # Return a list of tuples (song, artist)
+        return selected_song, selected_artist, list(zip(recommended_songs, recommended_artists))
     except Exception as e:
-        print(f"Error recommending songs: {e}")
+        st.error(f"Error recommending songs: {e}")
         return None
 
 def main():
+    st.title("Music Recommendation System")
+    st.write("This app recommends similar songs based on your input!")
+    
     file_path = 'songs_normalize.csv'
     df = load_data(file_path)
     if df is None:
-        return  # Exit if there's an error loading data
+        return
 
     df, df_features = preprocess_data(df)
     if df_features is None:
-        return  # Exit if there's an error preprocessing
+        return
 
     similarity_matrix = calculate_similarity(df_features)
     if similarity_matrix is None:
-        return  # Exit if there's an error calculating similarity
+        return
 
-    while True:
-        if input("Enter a song name (or 'exit' to quit): ").lower() == 'exit':
-            break
-        artist_name = input("Enter artist name (optional, press Enter to skip): ")
+    song_name = st.text_input("Enter a song name:")
+    artist_name = st.text_input("Enter artist name (optional):")
 
-        result = recommend_songs(input("Enter a song name (or 'exit' to quit): "), artist_name, df, similarity_matrix)
-        if result:
-            selected_song, selected_artist, recommended_songs = result
-            print(f"\nSelected Song: {selected_song} by {selected_artist}")
-            print("\nRecommended Songs:")
-            for song, artist in recommended_songs:
-                print(f"- {song} by {artist}")
+    if st.button("Get Recommendations"):
+        if song_name:
+            result = recommend_songs(song_name, artist_name, df, similarity_matrix)
+            if result:
+                selected_song, selected_artist, recommended_songs = result
+                st.subheader(f"Selected Song: {selected_song} by {selected_artist}")
+                st.subheader("Recommended Songs:")
+                for song, artist in recommended_songs:
+                    st.write(f"- {song} by {artist}")
         else:
-            print("No recommendations found.")
+            st.warning("Please enter a song name.")
 
 if __name__ == "__main__":
     main()
