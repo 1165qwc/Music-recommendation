@@ -2,6 +2,7 @@ import pandas as pd
 from sklearn.metrics.pairwise import cosine_similarity
 import numpy as np
 import streamlit as st
+import urllib.parse
 
 def load_data(file_path):
     try:
@@ -47,6 +48,24 @@ def calculate_similarity(df_features):
         st.error(f"Error calculating similarity: {e}")
         return None
 
+def get_youtube_search_url(song_name, artist_name):
+    """Generate a YouTube Music search URL for a song"""
+    query = f"{song_name} {artist_name} official audio"
+    encoded_query = urllib.parse.quote(query)
+    return f"https://music.youtube.com/search?q={encoded_query}"
+
+def get_music_icon_url(index):
+    """Return a music-themed icon URL based on the index"""
+    # Use a set of predefined music-themed icons or colors that rotate based on index
+    icon_list = [
+        "https://img.icons8.com/color/96/000000/musical-notes.png",
+        "https://img.icons8.com/color/96/000000/music.png",
+        "https://img.icons8.com/color/96/000000/musical.png",
+        "https://img.icons8.com/color/96/000000/audio-wave.png",
+        "https://img.icons8.com/color/96/000000/electronic-music.png"
+    ]
+    return icon_list[index % len(icon_list)]
+
 def recommend_songs(song_name, artist_name, df, similarity_matrix, num_recommendations=10):
     try:
         processed_song_name = song_name.lower()
@@ -81,9 +100,38 @@ def recommend_songs(song_name, artist_name, df, similarity_matrix, num_recommend
 
         # Get the top N recommendations
         top_n_indices = similar_song_indices[:num_recommendations]
-        recommended_songs = df.iloc[top_n_indices]['song'].tolist()
-        recommended_artists = df.iloc[top_n_indices]['artist'].tolist()
-        return selected_song, selected_artist, list(zip(recommended_songs, recommended_artists))
+        
+        recommendations = []
+        for i, idx in enumerate(top_n_indices):
+            rec_song = df.iloc[idx]['song']
+            rec_artist = df.iloc[idx]['artist']
+            
+            # Generate YouTube Music search link
+            yt_link = get_youtube_search_url(rec_song, rec_artist)
+            
+            # Get a music icon based on index
+            icon_url = get_music_icon_url(i)
+            
+            recommendations.append({
+                'song': rec_song,
+                'artist': rec_artist,
+                'youtube_link': yt_link,
+                'icon_url': icon_url,
+                'similarity_score': similarity_scores[idx]
+            })
+        
+        # Also get YouTube link for the selected song
+        selected_yt_link = get_youtube_search_url(selected_song, selected_artist)
+        
+        return {
+            'selected': {
+                'song': selected_song,
+                'artist': selected_artist,
+                'youtube_link': selected_yt_link,
+                'icon_url': get_music_icon_url(0)
+            },
+            'recommendations': recommendations
+        }
     except Exception as e:
         st.error(f"Error recommending songs: {e}")
         return None
@@ -107,16 +155,59 @@ def main():
 
     song_name = st.text_input("Enter a song name:")
     artist_name = st.text_input("Enter artist name (optional):")
+    num_recommendations = st.slider("Number of recommendations:", 5, 20, 10)
 
     if st.button("Get Recommendations"):
         if song_name:
-            result = recommend_songs(song_name, artist_name, df, similarity_matrix)
+            with st.spinner("Finding recommendations..."):
+                result = recommend_songs(song_name, artist_name, df, similarity_matrix, num_recommendations)
+                
             if result:
-                selected_song, selected_artist, recommended_songs = result
-                st.subheader(f"Selected Song: {selected_song} by {selected_artist}")
+                selected = result['selected']
+                recommendations = result['recommendations']
+                
+                # Display selected song with icon and link
+                st.subheader(f"Selected Song: {selected['song']} by {selected['artist']}")
+                
+                col1, col2 = st.columns([1, 3])
+                with col1:
+                    st.image(selected['icon_url'], width=80)
+                with col2:
+                    st.markdown(f"[Listen on YouTube Music]({selected['youtube_link']})")
+                    st.markdown("Your seed song for recommendations")
+                
+                # Display recommendations
                 st.subheader("Recommended Songs:")
-                for song, artist in recommended_songs:
-                    st.write(f"- {song} by {artist}")
+                
+                # Custom CSS for better card layout
+                st.markdown("""
+                <style>
+                .song-card {
+                    background-color: #f5f5f5;
+                    border-radius: 10px;
+                    padding: 15px;
+                    margin-bottom: 15px;
+                }
+                .song-card img {
+                    border-radius: 5px;
+                }
+                </style>
+                """, unsafe_allow_html=True)
+                
+                # Use columns to display recommendations in a grid
+                cols = st.columns(2)
+                for i, rec in enumerate(recommendations):
+                    with cols[i % 2]:
+                        st.markdown(f"""
+                        <div class="song-card">
+                            <h3>{rec['song']} by {rec['artist']}</h3>
+                            <p>Similarity: {rec['similarity_score']:.2f}</p>
+                        </div>
+                        """, unsafe_allow_html=True)
+                        
+                        st.image(rec['icon_url'], width=60)
+                        st.markdown(f"[Listen on YouTube Music]({rec['youtube_link']})")
+                        st.markdown("---")
         else:
             st.warning("Please enter a song name.")
 
