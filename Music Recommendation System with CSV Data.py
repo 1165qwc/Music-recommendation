@@ -132,6 +132,12 @@ def recommend_songs(song_name, artist_name, df, similarity_matrix, num_recommend
         selected_artwork = get_itunes_artwork(selected_song, selected_artist)
         selected_yt_link = get_youtube_search_url(selected_song, selected_artist)
         
+        # Debug info 
+        st.sidebar.write("Debug: Similarity score range")
+        unique_scores = sorted(set([similarity_scores[idx] for idx in top_n_indices]))
+        st.sidebar.write(f"Min: {min(unique_scores):.4f}, Max: {max(unique_scores):.4f}")
+        st.sidebar.write(f"Unique scores: {len(unique_scores)}")
+        
         recommendations = []
         for idx in top_n_indices:
             rec_song = df.iloc[idx]['song']
@@ -141,12 +147,14 @@ def recommend_songs(song_name, artist_name, df, similarity_matrix, num_recommend
             artwork_url = get_itunes_artwork(rec_song, rec_artist)
             yt_link = get_youtube_search_url(rec_song, rec_artist)
             
+            # Make sure to round the similarity score for display
+            # Using 4 decimal places to show variation
             recommendations.append({
                 'song': rec_song,
                 'artist': rec_artist,
                 'youtube_link': yt_link,
                 'artwork_url': artwork_url,
-                'similarity_score': similarity_scores[idx]
+                'similarity_score': round(float(similarity_scores[idx]), 4)
             })
         
         return {
