@@ -149,6 +149,7 @@ def recommend_songs(song_name, artist_name, df, similarity_matrix, num_recommend
             
             # Make sure to round the similarity score for display
             # Using 4 decimal places to show variation
+            
             recommendations.append({
                 'song': rec_song,
                 'artist': rec_artist,
