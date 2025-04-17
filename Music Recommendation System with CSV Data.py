@@ -5,6 +5,8 @@ import streamlit as st
 import urllib.parse
 import requests
 import json
+from sklearn.preprocessing import MinMaxScaler
+
 
 def load_data(file_path):
     try:
@@ -19,14 +21,20 @@ def load_data(file_path):
 
 def preprocess_data(df):
     try:
-        # Save original indices before preprocessing
-        df = df.reset_index(drop=True)
-        
-        # Preprocessing steps
-        df = df.dropna()  # Drop rows with any missing values
-        df = df.drop_duplicates() #drop duplicates
-        
-        # Reset index after dropping rows to ensure continuous indices
+        original_len = len(df)
+
+        # Check duplicates before dropping
+        num_duplicates_before = df.duplicated().sum()
+        st.sidebar.write(f"🔁 Duplicates before cleaning: {num_duplicates_before}")
+
+        # Drop missing values and exact duplicates
+        df = df.dropna()
+        df = df.drop_duplicates()
+
+        cleaned_len = len(df)
+        st.sidebar.write(f"🧼 Cleaned dataset: {cleaned_len} songs")
+        st.sidebar.write(f"🚮 Removed rows during cleaning: {original_len - cleaned_len}")
+
         df = df.reset_index(drop=True)
 
         # One-hot encode 'mode' and 'genre'
@@ -34,14 +42,20 @@ def preprocess_data(df):
 
         # Select features for similarity calculation
         feature_list = ['danceability', 'energy', 'key', 'loudness',
-                          'speechiness', 'acousticness', 'instrumentalness',
-                          'liveness', 'valence', 'tempo']
+                        'speechiness', 'acousticness', 'instrumentalness',
+                        'liveness', 'valence', 'tempo']
+        
         if not all(feature in df.columns for feature in feature_list):
             st.error("Error: Not all required features are present in the DataFrame.")
             return None
 
+        # Extract features and normalize
         df_features = df[feature_list]
+        scaler = MinMaxScaler()
+        df_features = pd.DataFrame(scaler.fit_transform(df_features), columns=feature_list)
+
         return df, df_features
+
     except KeyError as e:
         st.error(f"Error: Key not found in DataFrame: {e}")
         return None
@@ -150,12 +164,14 @@ def recommend_songs(song_name, artist_name, df, similarity_matrix, num_recommend
             # Make sure to round the similarity score for display
             # Using 4 decimal places to show variation
             
+            score = similarity_scores[idx]
             recommendations.append({
                 'song': rec_song,
                 'artist': rec_artist,
                 'youtube_link': yt_link,
                 'artwork_url': artwork_url,
-                'similarity_score': round(float(similarity_scores[idx]), 4)
+                'similarity_score': round(float(score), 4),
+                'raw_score': score  # Add raw score for deeper debug
             })
         
         return {
@@ -256,6 +272,8 @@ def main():
                         st.markdown(f"**Similarity Score:** {rec['similarity_score']:.2f}")
                         st.markdown(f"[Listen on YouTube Music]({rec['youtube_link']})")
                         st.markdown("</div>", unsafe_allow_html=True)
+                        st.markdown(f"**Similarity Score:** {rec['similarity_score']:.4f}")
+
         else:
             st.warning("Please enter a song name.")
 
