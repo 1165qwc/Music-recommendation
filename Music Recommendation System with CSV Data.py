@@ -41,7 +41,7 @@ def preprocess_data(df):
         df = pd.get_dummies(df, columns=['mode', 'genre'], drop_first=True)
 
         # Select features for similarity calculation
-        feature_list = ['danceability', 'energy', 'key', 'loudness',
+        feature_list = ['danceability', 'energy', 'loudness',
                         'speechiness', 'acousticness', 'instrumentalness',
                         'liveness', 'valence', 'tempo']
         
