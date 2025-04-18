@@ -269,10 +269,9 @@ def main():
                         st.image(rec['artwork_url'], width=150)
                         st.markdown(f"### {rec['song']}")
                         st.markdown(f"**Artist:** {rec['artist']}")
-                        st.markdown(f"**Similarity Score:** {rec['similarity_score']:.2f}")
                         st.markdown(f"[Listen on YouTube Music]({rec['youtube_link']})")
                         st.markdown("</div>", unsafe_allow_html=True)
-                        st.markdown(f"**Similarity Score:** {rec['similarity_score']:.4f}")
+                        st.markdown(f"**Similarity Score:** {rec['similarity_score']:.5f}")
 
         else:
             st.warning("Please enter a song name.")
