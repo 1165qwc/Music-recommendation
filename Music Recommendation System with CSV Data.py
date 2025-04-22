@@ -281,14 +281,10 @@ def get_song_suggestions(df, query, max_suggestions=10):
     # Limit to max_suggestions
     matching_songs = matching_songs.head(max_suggestions)
     
-    # Format suggestions as a list of dictionaries
+    # Format suggestions as a list of strings for autocomplete
     suggestions = []
     for _, song in matching_songs.iterrows():
-        suggestions.append({
-            'song': song['song'],
-            'artist': song['artist'],
-            'display': f"{song['song']} - {song['artist']}"
-        })
+        suggestions.append(f"{song['song']} - {song['artist']}")
     
     return suggestions
 
@@ -329,9 +325,6 @@ def main():
     with tab1:
         st.subheader("Find Similar Songs")
         
-        # Create a container for the search input and suggestions
-        search_container = st.container()
-        
         # Initialize session state for song selection if not already present
         if 'selected_song' not in st.session_state:
             st.session_state.selected_song = None
@@ -344,42 +337,39 @@ def main():
         col1, col2 = st.columns([3, 1])
         
         with col1:
-            # Text input for song search with autocomplete
-            search_query = st.text_input("Search for a song:", value=st.session_state.search_query, key="song_search")
+            # Get all song names for autocomplete
+            all_songs = [f"{row['song']} - {row['artist']}" for _, row in df.iterrows()]
+            
+            # Use selectbox for song search with autocomplete
+            search_query = st.selectbox(
+                "Search for a song:",
+                options=[""] + all_songs,
+                key="song_search"
+            )
             
             # Update session state
             st.session_state.search_query = search_query
             
-            # Get suggestions based on the search query
+            # If a song is selected, extract song name and artist
             if search_query:
-                suggestions = get_song_suggestions(df, search_query)
-                
-                # Display suggestions in a selectbox
-                if suggestions:
-                    suggestion_options = [s['display'] for s in suggestions]
-                    selected_suggestion = st.selectbox(
-                        "Select a song from the suggestions:",
-                        options=[""] + suggestion_options,
-                        key="song_suggestion"
-                    )
-                    
-                    # If a suggestion is selected, update the session state
-                    if selected_suggestion:
-                        for suggestion in suggestions:
-                            if suggestion['display'] == selected_suggestion:
-                                st.session_state.selected_song = suggestion['song']
-                                st.session_state.selected_artist = suggestion['artist']
-                                break
+                parts = search_query.split(" - ", 1)
+                if len(parts) == 2:
+                    st.session_state.selected_song = parts[0]
+                    st.session_state.selected_artist = parts[1]
         
         with col2:
-            # Optional artist name input
-            artist_name = st.text_input("Artist name (optional):", key="artist_input")
+            # Optional artist name input (pre-filled if selected from autocomplete)
+            artist_name = st.text_input(
+                "Artist name (optional):", 
+                value=st.session_state.selected_artist if st.session_state.selected_artist else "",
+                key="artist_input"
+            )
             num_recommendations = st.slider("Number of recommendations:", 5, 20, 10)
         
         # Button to get recommendations
         if st.button("Get Similar Songs"):
-            # Use the selected song from suggestions if available
-            song_name = st.session_state.selected_song if st.session_state.selected_song else search_query
+            # Use the selected song from autocomplete if available
+            song_name = st.session_state.selected_song if st.session_state.selected_song else search_query.split(" - ")[0] if search_query else None
             
             if song_name:
                 with st.spinner("Finding recommendations and artwork..."):
@@ -429,7 +419,7 @@ def main():
                             st.markdown("</div>", unsafe_allow_html=True)
                             st.markdown(f"*Similarity Score:* {rec['similarity_score']:.5f}")
             else:
-                st.warning("Please enter a song name or select from suggestions.")
+                st.warning("Please select a song from the dropdown.")
     
     with tab2:
         st.subheader("Popular Songs by Genre")
