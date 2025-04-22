@@ -18,7 +18,7 @@ Alice Deejay,Better Off Alone,214883,2000,73,0.671,0.88,8,-6.149,0,0.0552,0.0018
 Gigi D'Agostino,The Riddle,285426,1999,64,0.74,0.876,6,-6.87,0,0.0369,0.0173,0.00152,0.0785,0.825,127.002,Pop
 Dr. Dre,The Next Episode,161506,1999,82,0.922,0.909,10,-2.429,0,0.27,0.0281,0,0.0856,0.309,95.295,Hip-hop
 Linkin Park,In the End,216880,2000,83,0.556,0.864,3,-5.87,0,0.0584,0.00958,0,0.209,0.4,105.143,"Rock, Metal"
-Tom Jones,Sexbomb,211893,1999,65,0.801,0.876,8,-3.94,0,0.0446,0.144,1.38E-05,0.104,0.932,122.979,"Rock, Folk/Acoustic, easy listening"
+Tom Jones,Sexbomb,211893,1999,65,0.801,0.876,8,-3.94,0,0.0446,0.144,1.38E-05,0.104,0.932,122.979,"Rock, Folk/Acoustic, Easy Listening"
 Sonique,It Feels So Good,240866,2000,62,0.634,0.677,5,-7.278,0,0.0304,0.0117,0.00103,0.126,0.558,135.012,Pop
 M.O.P.,Cold as Ice,244466,2000,54,0.656,0.88,11,-5.425,0,0.143,0.0421,0,0.294,0.758,85.565,Hip-hop
 Melanie C,I Turn To You,352173,1999,54,0.522,0.803,1,-5.825,1,0.0327,0.00117,0.00167,0.31,0.0783,135.205,"Pop, Dance/Electronic"
@@ -57,7 +57,7 @@ Baha Men,Who Let The Dogs Out,198400,2000,65,0.869,0.887,0,-4.505,1,0.0993,0.060
 Donell Jones,"U Know What's Up (feat. Lisa ""Left Eye"" Lopes)",243733,1999,63,0.854,0.543,8,-6.166,0,0.0844,0.0402,5.73E-05,0.0419,0.868,103.032,"Pop, R&B"
 LeAnn Rimes,Can't Fight The Moonlight,215506,2001,65,0.628,0.834,6,-6.341,0,0.0497,0.403,0,0.051,0.626,97.865,"Pop, Country"
 Oasis,Go Let It Out,278666,2000,0,0.408,0.849,2,-5.631,1,0.0333,0.0136,2.51E-05,0.56,0.628,84.192,"Folk/Acoustic, Rock"
-DJ Ötzi,Hey Baby (Radio Mix),219240,2010,58,0.666,0.968,10,-3.196,1,0.046,0.123,0,0.347,0.834,135.099,"Pop, easy listening, Dance/Electronic"
+DJ Ötzi,Hey Baby (Radio Mix),219240,2010,58,0.666,0.968,10,-3.196,1,0.046,0.123,0,0.347,0.834,135.099,"Pop, , Dance/Electronic"
 P!nk,Most Girls,298960,2000,52,0.742,0.732,2,-6.046,0,0.0311,0.0424,0.00446,0.101,0.694,97.922,Pop
 Mariah Carey,Against All Odds (Take A Look at Me Now) (feat. Westlife),199480,2011,0,0.471,0.514,1,-5.599,1,0.0315,0.584,0,0.103,0.373,117.338,"Pop, R&B"
 Craig David,Fill Me In,257200,2000,60,0.682,0.744,8,-6.981,1,0.0365,0.376,0.00951,0.06,0.827,132.493,"Hip-hop, Pop, R&B"
@@ -278,7 +278,7 @@ DJ Sammy,Heaven,233600,2002,63,0.571,0.953,8,-5.601,1,0.0548,0.0011,0.000606,0.2
 Britney Spears,"I'm Not a Girl, Not Yet a Woman",231066,2001,58,0.534,0.543,3,-6.857,1,0.0245,0.579,0,0.112,0.418,78.996,Pop
 Cam’ron,Oh Boy,204706,2002,67,0.754,0.767,6,-5.586,1,0.145,0.0216,0,0.172,0.828,83.014,"Hip-hop, Pop"
 Red Hot Chili Peppers,By the Way,216933,2002,73,0.451,0.97,0,-4.938,1,0.107,0.0264,0.00355,0.102,0.198,122.444,Rock
-Elvis Presley,A Little Less Conversation - JXL Radio Edit Remix,211506,2002,60,0.597,0.97,4,-5.972,0,0.0502,0.000385,0.205,0.133,0.717,114.999,"Rock, easy listening"
+Elvis Presley,A Little Less Conversation - JXL Radio Edit Remix,211506,2002,60,0.597,0.97,4,-5.972,0,0.0502,0.000385,0.205,0.133,0.717,114.999,"Rock, "
 Atomic Kitten,The Tide Is High - Radio Mix,206093,2002,65,0.783,0.649,7,-4.127,1,0.0322,0.0209,0.00482,0.067,0.665,103.997,Pop
 *NSYNC,Girlfriend,253600,2001,50,0.745,0.807,0,-5.191,0,0.0884,0.0887,1.49E-05,0.0283,0.858,93.967,Pop
 Robbie Williams,Somethin' Stupid,170493,2001,64,0.654,0.515,0,-12.185,1,0.0261,0.429,5.62E-06,0.174,0.677,106.191,"Pop, Rock"
@@ -482,7 +482,7 @@ Beyoncé,"Me, Myself and I",301133,2003,62,0.75,0.458,1,-9.092,1,0.0803,0.226,3.
 3 Doors Down,Here Without You,238733,2002,74,0.557,0.533,10,-6.817,0,0.0252,0.0492,0,0.205,0.233,143.994,"Pop, Rock, Metal"
 Kanye West,All Falls Down,223506,2004,80,0.657,0.734,8,-4.832,0,0.484,0.149,0,0.139,0.434,91.03,Hip-hop
 Twista,Sunshine (feat. Anthony Hamilton),226013,2004,56,0.926,0.888,11,-5.337,1,0.294,0.261,0,0.348,0.819,98.523,"Hip-hop, Pop, R&B"
-Katie Melua,The Closest Thing to Crazy,252466,2003,55,0.562,0.219,4,-13.2,1,0.0312,0.856,0.000296,0.0979,0.106,127.831,"Pop, easy listening, Jazz"
+Katie Melua,The Closest Thing to Crazy,252466,2003,55,0.562,0.219,4,-13.2,1,0.0312,0.856,0.000296,0.0979,0.106,127.831,"Pop, Easy Listening, Jazz"
 Usher,My Boo,223440,2004,76,0.662,0.507,5,-8.238,1,0.118,0.257,0,0.0465,0.676,86.412,"Hip-hop, Pop, R&B"
 Lloyd,Southside,277840,2004,59,0.688,0.404,9,-9.481,0,0.0818,0.377,0,0.0813,0.448,75.007,"Hip-hop, Pop, R&B"
 LMC,Take Me To The Clouds Above - LMC Vs. U2 / Radio Edit,171546,2004,59,0.668,0.905,6,-5.395,1,0.038,0.00232,0.0331,0.141,0.667,128.658,Dance/Electronic
@@ -560,7 +560,7 @@ Thirty Seconds To Mars,The Kill,231533,2005,74,0.179,0.912,4,-3.881,0,0.0791,0.0
 Alicia Keys,Karma,256000,2003,50,0.727,0.736,10,-6.203,1,0.0615,0.0743,0.00311,0.0348,0.687,85.098,"Pop, R&B"
 2Pac,Ghetto Gospel,238053,2004,68,0.794,0.614,5,-5.352,0,0.0467,0.0964,0,0.0788,0.663,80.569,Hip-hop
 Craig David,Don't Love You No More (I'm Sorry),243986,2005,56,0.636,0.558,7,-7.076,1,0.0245,0.462,0,0.062,0.572,100.113,"Hip-hop, Pop, R&B"
-Katie Melua,Nine Million Bicycles,197160,2005,60,0.534,0.247,0,-15.636,1,0.0322,0.516,0.00859,0.122,0.344,82.168,"Pop, easy listening, Jazz"
+Katie Melua,Nine Million Bicycles,197160,2005,60,0.534,0.247,0,-15.636,1,0.0322,0.516,0.00859,0.122,0.344,82.168,"Pop, Easy Listening, Jazz"
 Lil Jon & The East Side Boyz,Lovers And Friends,260600,2004,66,0.675,0.501,10,-6.183,1,0.22,0.0541,0,0.429,0.532,139.861,"Hip-hop, Pop"
 Mariah Carey,Don't Forget About Us - Radio Edit,233866,2005,0,0.7,0.529,10,-6.816,0,0.0395,0.0422,0,0.101,0.386,143.555,"Pop, R&B"
 Ying Yang Twins,Wait (The Whisper Song),179160,2005,57,0.933,0.513,7,-13.203,1,0.347,0.00112,0.00248,0.107,0.595,102.017,"Hip-hop, Pop"
@@ -881,7 +881,7 @@ Gavin DeGraw,In Love With a Girl,206000,2008,51,0.438,0.906,3,-4.8,1,0.0438,0.01
 Jordin Sparks,Tattoo,233466,2007,54,0.566,0.766,2,-5.036,1,0.0399,0.431,0,0.101,0.547,168.005,"Pop, R&B"
 Coldplay,Violet Hill,222653,2008,63,0.33,0.58,1,-7.875,0,0.0374,0.0614,0.00129,0.115,0.11,76.093,"Rock, Pop"
 Ray J,Sexy Can I feat. Yung Berg,204040,2008,1,0.575,0.684,1,-6.007,1,0.325,0.299,0,0.614,0.926,172.155,"Hip-hop, Pop, R&B"
-Jennifer Hudson,Spotlight,250106,2008,60,0.707,0.724,11,-3.887,0,0.051,0.0448,0,0.072,0.659,108.984,"Pop, R&B, easy listening"
+Jennifer Hudson,Spotlight,250106,2008,60,0.707,0.724,11,-3.887,0,0.051,0.0448,0,0.072,0.659,108.984,"Pop, R&B, Easy Listening"
 John Legend,Green Light (feat. André 3000),284186,2008,55,0.622,0.882,9,-5.59,0,0.119,0.0912,0,0.216,0.762,77.506,"Pop, R&B"
 Jonas Brothers,Burnin' Up,175093,2008,68,0.667,0.954,2,-3.462,1,0.0817,0.0296,0,0.331,0.807,114.03,Pop
 Lupe Fiasco,Superstar (feat. Matthew Santos),289000,2007,64,0.572,0.822,11,-6.015,0,0.361,0.207,0,0.359,0.472,94.812,"Hip-hop, Pop"
