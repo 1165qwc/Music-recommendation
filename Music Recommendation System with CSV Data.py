@@ -410,7 +410,7 @@ with tab1:
 
         if st.button("Get Mood Songs"):
             def filter_by_mood(df, mood):
-                if mood == "happy":
+                if mood == "Happy":
                     return df[(df['valence'] > 0.7) & (df['energy'] > 0.6)]
                 elif mood == "Sad":
                     return df[(df['valence'] < 0.3)]
