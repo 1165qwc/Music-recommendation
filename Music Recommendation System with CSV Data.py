@@ -37,13 +37,19 @@ def preprocess_data(df):
 
         df = df.reset_index(drop=True)
 
-        # One-hot encode 'mode' and 'genre'
-        df = pd.get_dummies(df, columns=['mode', 'genre'], drop_first=True)
+        # Process genres: split the genre string and create a list of genres
+        df['genres'] = df['genre'].str.split(',').apply(lambda x: [g.strip() for g in x])
+        
+        # Create a list of all unique genres
+        all_genres = sorted(list(set([genre for genres in df['genres'] for genre in genres])))
+        
+        # One-hot encode 'mode'
+        df = pd.get_dummies(df, columns=['mode'], drop_first=True)
 
         # Select features for similarity calculation
         feature_list = ['danceability', 'energy', 'key', 'loudness',
-                        'speechiness', 'acousticness', 'instrumentalness',
-                        'liveness', 'valence', 'tempo']
+                       'speechiness', 'acousticness', 'instrumentalness',
+                       'liveness', 'valence', 'tempo']
         
         if not all(feature in df.columns for feature in feature_list):
             st.error("Error: Not all required features are present in the DataFrame.")
@@ -54,11 +60,8 @@ def preprocess_data(df):
         scaler = MinMaxScaler()
         df_features = pd.DataFrame(scaler.fit_transform(df_features), columns=feature_list)
 
-        return df, df_features
+        return df, df_features, all_genres
 
-    except KeyError as e:
-        st.error(f"Error: Key not found in DataFrame: {e}")
-        return None
     except Exception as e:
         st.error(f"Error preprocessing data: {e}")
         return None
@@ -192,22 +195,18 @@ def recommend_songs(song_name, artist_name, df, similarity_matrix, num_recommend
 def get_popular_songs_by_genre(df, genre, num_recommendations=10):
     """Get popular songs from a specific genre based on popularity metrics."""
     try:
-        # Filter songs by the selected genre
-        genre_songs = df[df['genre'] == genre].copy()
+        # Filter songs by the selected genre using the genres list
+        genre_songs = df[df['genres'].apply(lambda x: genre in x)].copy()
         
         if genre_songs.empty:
             st.warning(f"No songs found for genre: {genre}")
             return None
             
         # Create a popularity score based on multiple factors
-        # We'll use a weighted combination of danceability, energy, and valence
-        # These are good proxies for general popularity in music
-        
-        # Normalize the features to 0-1 range
         scaler = MinMaxScaler()
         
-        # Select features that might indicate popularity
-        popularity_features = ['danceability', 'energy', 'valence', 'loudness']
+        # Select features that indicate popularity
+        popularity_features = ['popularity', 'danceability', 'energy', 'valence']
         
         # Make sure all features exist
         if not all(feature in genre_songs.columns for feature in popularity_features):
@@ -218,8 +217,7 @@ def get_popular_songs_by_genre(df, genre, num_recommendations=10):
         normalized_features = scaler.fit_transform(genre_songs[popularity_features])
         
         # Create a popularity score (weighted average)
-        # You can adjust these weights based on what you think makes a song popular
-        weights = [0.3, 0.3, 0.2, 0.2]  # danceability, energy, valence, loudness
+        weights = [0.4, 0.2, 0.2, 0.2]  # popularity, danceability, energy, valence
         popularity_scores = np.sum(normalized_features * weights, axis=1)
         
         # Add the popularity score to the dataframe
@@ -274,7 +272,7 @@ def main():
         result = preprocess_data(df)
         if result is None:
             return
-        df, df_features = result
+        df, df_features, all_genres = result
         
         # Show info after preprocessing
         st.sidebar.write(f"After preprocessing: {len(df)} songs")
@@ -349,52 +347,44 @@ def main():
     with tab2:
         st.subheader("Popular Songs by Genre")
         
-        # Get unique genres from the dataset
-        if 'genre' in df.columns:
-            genres = sorted(df['genre'].unique().tolist())
-            
-            # Add a "All Genres" option
-            genres.insert(0, "All Genres")
-            
-            selected_genre = st.selectbox("Select a genre:", genres)
-            num_genre_recommendations = st.slider("Number of recommendations:", 5, 20, 10, key="genre_slider")
-            
-            if st.button("Get Popular Songs"):
-                with st.spinner("Finding popular songs..."):
-                    if selected_genre == "All Genres":
-                        # Get popular songs from all genres
-                        all_recommendations = []
-                        for genre in genres[1:]:  # Skip "All Genres"
-                            genre_recs = get_popular_songs_by_genre(df, genre, num_genre_recommendations // len(genres[1:]) + 1)
-                            if genre_recs:
-                                all_recommendations.extend(genre_recs)
-                        
-                        # Sort by popularity score and take top N
-                        all_recommendations.sort(key=lambda x: x['popularity_score'], reverse=True)
-                        recommendations = all_recommendations[:num_genre_recommendations]
-                    else:
-                        # Get popular songs from the selected genre
-                        recommendations = get_popular_songs_by_genre(df, selected_genre, num_genre_recommendations)
+        # Use the all_genres list for the dropdown
+        selected_genre = st.selectbox("Select a genre:", ["All Genres"] + all_genres)
+        num_genre_recommendations = st.slider("Number of recommendations:", 5, 20, 10, key="genre_slider")
+        
+        if st.button("Get Popular Songs"):
+            with st.spinner("Finding popular songs..."):
+                if selected_genre == "All Genres":
+                    # Get popular songs from all genres
+                    all_recommendations = []
+                    for genre in all_genres:
+                        genre_recs = get_popular_songs_by_genre(df, genre, num_genre_recommendations // len(all_genres) + 1)
+                        if genre_recs:
+                            all_recommendations.extend(genre_recs)
                     
-                    if recommendations:
-                        st.subheader(f"Popular {selected_genre} Songs")
-                        
-                        # Create a grid layout
-                        cols = st.columns(2)
-                        for i, rec in enumerate(recommendations):
-                            with cols[i % 2]:
-                                st.markdown("<div class='song-card'>", unsafe_allow_html=True)
-                                st.image(rec['artwork_url'], width=150)
-                                st.markdown(f"### {rec['song']}")
-                                st.markdown(f"**Artist:** {rec['artist']}")
-                                st.markdown(f"**Genre:** {rec['genre']}")
-                                st.markdown(f"[Listen on YouTube Music]({rec['youtube_link']})")
-                                st.markdown("</div>", unsafe_allow_html=True)
-                                st.markdown(f"**Popularity Score:** {rec['popularity_score']:.5f}")
-                    else:
-                        st.warning(f"No recommendations found for {selected_genre}.")
-        else:
-            st.error("Genre information not available in the dataset.")
+                    # Sort by popularity score and take top N
+                    all_recommendations.sort(key=lambda x: x['popularity_score'], reverse=True)
+                    recommendations = all_recommendations[:num_genre_recommendations]
+                else:
+                    # Get popular songs from the selected genre
+                    recommendations = get_popular_songs_by_genre(df, selected_genre, num_genre_recommendations)
+                
+                if recommendations:
+                    st.subheader(f"Popular {selected_genre} Songs")
+                    
+                    # Create a grid layout
+                    cols = st.columns(2)
+                    for i, rec in enumerate(recommendations):
+                        with cols[i % 2]:
+                            st.markdown("<div class='song-card'>", unsafe_allow_html=True)
+                            st.image(rec['artwork_url'], width=150)
+                            st.markdown(f"### {rec['song']}")
+                            st.markdown(f"**Artist:** {rec['artist']}")
+                            st.markdown(f"**Genre:** {rec['genre']}")
+                            st.markdown(f"[Listen on YouTube Music]({rec['youtube_link']})")
+                            st.markdown("</div>", unsafe_allow_html=True)
+                            st.markdown(f"**Popularity Score:** {rec['popularity_score']:.5f}")
+                else:
+                    st.warning(f"No recommendations found for {selected_genre}.")
 
 if __name__ == "__main__":
     main()
