@@ -289,7 +289,19 @@ def main():
     
     with tab1:
         st.subheader("Find Similar Songs")
-        song_name = st.text_input("Enter a song name:")
+        song_query = st.text_input("Enter a song name:")
+matching_titles = []
+
+if song_query:
+    # Show suggestions based on starting characters
+    matching_titles = df[df['song'].str.lower().str.startswith(song_query.lower())]['song'].unique()
+    matching_titles = sorted(matching_titles)[:10]  # limit to first 10 suggestions
+
+    if matching_titles:
+        st.markdown("**Suggestions:**")
+        for title in matching_titles:
+            st.markdown(f"- {title}")
+
         artist_name = st.text_input("Enter artist name (optional):")
         num_recommendations = st.slider("Number of recommendations:", 5, 20, 10)
         
