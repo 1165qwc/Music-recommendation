@@ -451,11 +451,7 @@ if song_query:
                         st.markdown(f"**Artist:** {song['artist']}")
                         st.markdown(f"[Listen on YouTube Music]({yt_link})")
                         st.markdown("</div>", unsafe_allow_html=True)
-            else:
-                 st.warning(f"No recommendations found for {selected_mood}.")
-
-     
-
+            
 
 if __name__ == "__main__":
     main()
