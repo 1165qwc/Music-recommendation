@@ -285,7 +285,7 @@ def main():
         st.sidebar.write(f"Similarity matrix shape: {similarity_matrix.shape}")
     
     # Create tabs for different recommendation methods
-    tab1, tab2, tab3 = st.tabs(["Similar Songs", "Popular by Genre", "Mood Songs"])
+    tab1, tab2 = st.tabs(["Similar Songs", "Popular by Genre"])
     
     with tab1:
         st.subheader("Find Similar Songs")
@@ -386,60 +386,5 @@ def main():
                 else:
                     st.warning(f"No recommendations found for {selected_genre}.")
 
-    with tab3:
-        st.subheader("Songs by Mood Category")
-
-        mood_options = [
-            "happy", "sad", "excited", "chill", "romantic",
-            "aggressive", "mysterious", "workout", "party", "study", "background music"
-        ]
-        selected_mood = st.selectbox("Choose a mood:", mood_options)
-        num_mood_recommendations = st.slider("Number of recommendations:", 5, 20, 10, key="mood_slider")
-
-        if st.button("Get Mood Songs"):
-            def filter_by_mood(df, mood):
-                if mood == "happy":
-                    return df[(df['valence'] > 0.7) & (df['energy'] > 0.6)]
-                elif mood == "sad":
-                    return df[(df['valence'] < 0.3)]
-                elif mood == "excited":
-                    return df[(df['energy'] > 0.8) & (df['tempo'] > 120)]
-                elif mood == "chill":
-                    return df[(df['energy'] < 0.4) & (df['valence'] > 0.4)]
-                elif mood == "romantic":
-                    return df[(df['valence'] > 0.6) & (df['acousticness'] > 0.5)]
-                elif mood == "aggressive":
-                    return df[(df['energy'] > 0.8) & (df['loudness'] > -5)]
-                elif mood == "mysterious":
-                    return df[(df['instrumentalness'] > 0.5) & (df['acousticness'] > 0.3)]
-                elif mood == "workout":
-                    return df[(df['energy'] > 0.7) & (df['tempo'] > 110)]
-                elif mood == "party":
-                    return df[(df['danceability'] > 0.7) & (df['valence'] > 0.5)]
-                elif mood == "study":
-                    return df[(df['instrumentalness'] > 0.6) & (df['energy'] < 0.5)]
-                elif mood == "background music":
-                    return df[(df['instrumentalness'] > 0.7)]
-                return pd.DataFrame()
-
-            mood_df = filter_by_mood(df, selected_mood)
-            if mood_df.empty:
-                st.warning(f"No songs found for the mood: {selected_mood}")
-            else:
-                mood_df = mood_df.sample(min(num_mood_recommendations, len(mood_df)))  # random sample
-                st.subheader(f"{selected_mood.title()} Songs")
-                cols = st.columns(2)
-                for i, (_, song) in enumerate(mood_df.iterrows()):
-                    with cols[i % 2]:
-                        artwork = get_itunes_artwork(song['song'], song['artist'])
-                        yt_link = get_youtube_search_url(song['song'], song['artist'])
-                        st.markdown("<div class='song-card'>", unsafe_allow_html=True)
-                        st.image(artwork, width=150)
-                        st.markdown(f"### {song['song']}")
-                        st.markdown(f"*Artist:* {song['artist']}")
-                        st.markdown(f"[Listen on YouTube Music]({yt_link})")
-                        st.markdown("</div>", unsafe_allow_html=True)
-
-
 if _name_ == "_main_":
-    main()
+    main()
