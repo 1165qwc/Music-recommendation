@@ -8,7 +8,7 @@ import json
 from sklearn.preprocessing import MinMaxScaler
  
  
- def load_data(file_path):
+def load_data(file_path):
      try:
          df = pd.read_csv(file_path)
          return df
@@ -19,7 +19,7 @@ from sklearn.preprocessing import MinMaxScaler
          st.error(f"Error loading data: {e}")
          return None
  
- def preprocess_data(df):
+def preprocess_data(df):
      try:
          original_len = len(df)
  
@@ -66,7 +66,7 @@ from sklearn.preprocessing import MinMaxScaler
          st.error(f"Error preprocessing data: {e}")
          return None
  
- def calculate_similarity(df_features):
+def calculate_similarity(df_features):
      try:
          similarity_matrix = cosine_similarity(df_features)
          return similarity_matrix
@@ -74,13 +74,13 @@ from sklearn.preprocessing import MinMaxScaler
          st.error(f"Error calculating similarity: {e}")
          return None
  
- def get_youtube_search_url(song_name, artist_name):
+def get_youtube_search_url(song_name, artist_name):
      """Generate a YouTube Music search URL for a song"""
      query = f"{song_name} {artist_name} official audio"
      encoded_query = urllib.parse.quote(query)
      return f"https://music.youtube.com/search?q={encoded_query}"
  
- def get_itunes_artwork(song_name, artist_name):
+def get_itunes_artwork(song_name, artist_name):
      """Get album artwork from iTunes"""
      try:
          # Format the query parameters
@@ -104,7 +104,7 @@ from sklearn.preprocessing import MinMaxScaler
          # In case of any error, return a default icon
          return "https://img.icons8.com/fluency/96/000000/musical-notes.png"
  
- def recommend_songs(song_name, artist_name, df, similarity_matrix, num_recommendations=10):
+def recommend_songs(song_name, artist_name, df, similarity_matrix, num_recommendations=10):
      try:
          processed_song_name = song_name.lower()
          processed_artist_name = artist_name.lower() if artist_name else ""
@@ -192,7 +192,7 @@ from sklearn.preprocessing import MinMaxScaler
          st.error(traceback.format_exc())
          return None
  
- def get_popular_songs_by_genre(df, genre, num_recommendations=10):
+def get_popular_songs_by_genre(df, genre, num_recommendations=10):
      """Get popular songs from a specific genre based on popularity metrics."""
      try:
          # Filter songs by the selected genre using the genres list
@@ -253,7 +253,7 @@ from sklearn.preprocessing import MinMaxScaler
          st.error(traceback.format_exc())
          return None
  
- def main():
+def main():
      st.title("Music Recommendation System")
      st.write("This app recommends similar songs based on your input!")
  
