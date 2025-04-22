@@ -287,63 +287,75 @@ def main():
     # Create tabs for different recommendation methods
     tab1, tab2, tab3 = st.tabs(["Similar Songs", "Popular by Genre", "Mood Songs"])
     
-    with tab1:
-        st.subheader("Find Similar Songs")
-        song_name = st.text_input("Enter a song name:")
-        artist_name = st.text_input("Enter artist name (optional):")
-        num_recommendations = st.slider("Number of recommendations:", 5, 20, 10)
-        
-        if st.button("Get Similar Songs"):
-            if song_name:
-                with st.spinner("Finding recommendations and artwork..."):
-                    result = recommend_songs(song_name, artist_name, df, similarity_matrix, num_recommendations)
-                    
-                if result:
-                    selected = result['selected']
-                    recommendations = result['recommendations']
-                    
-                    # Display selected song with artwork and link
-                    st.subheader("Selected Song")
-                    
-                    col1, col2 = st.columns([1, 3])
-                    with col1:
-                        st.image(selected['artwork_url'], width=150)
-                    with col2:
-                        st.markdown(f"## {selected['song']} by {selected['artist']}")
-                        st.markdown(f"[Listen on YouTube Music]({selected['youtube_link']})")
-                    
-                    st.markdown("---")
-                    
-                    # Display recommendations
-                    st.subheader("Recommended Songs")
-                    
-                    # Custom CSS for better card layout
-                    st.markdown("""
-                    <style>
-                    .song-card {
-                        background-color: #f8f9fa;
-                        border-radius: 10px;
-                        padding: 15px;
-                        margin-bottom: 15px;
-                        box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-                    }
-                    </style>
-                    """, unsafe_allow_html=True)
-                    
-                    # Create a grid layout
-                    cols = st.columns(2)
-                    for i, rec in enumerate(recommendations):
-                        with cols[i % 2]:
-                            st.markdown("<div class='song-card'>", unsafe_allow_html=True)
-                            st.image(rec['artwork_url'], width=150)
-                            st.markdown(f"### {rec['song']}")
-                            st.markdown(f"**Artist:** {rec['artist']}")
-                            st.markdown(f"[Listen on YouTube Music]({rec['youtube_link']})")
-                            st.markdown("</div>", unsafe_allow_html=True)
-                            st.markdown(f"**Similarity Score:** {rec['similarity_score']:.5f}")
-            else:
-                st.warning("Please enter a song name.")
-    
+with tab1:
+    st.subheader("Find Similar Songs")
+
+    song_query = st.text_input("Type a song name:")
+    artist_name = st.text_input("Enter artist name (optional):")
+    num_recommendations = st.slider("Number of recommendations:", 5, 20, 10)
+
+    # Suggest matching song titles
+    matching_titles = []
+    if song_query:
+        matching_titles = df[df['song'].str.lower().str.startswith(song_query.lower())]['song'].unique()
+        matching_titles = sorted(matching_titles)[:10]  # limit suggestions
+        if matching_titles.size > 0:
+            selected_title = st.selectbox("Select a song from suggestions:", matching_titles)
+        else:
+            selected_title = song_query  # fallback to what user typed
+    else:
+        selected_title = ""
+
+    if st.button("Get Similar Songs"):
+        if selected_title:
+            with st.spinner("Finding recommendations and artwork..."):
+                result = recommend_songs(selected_title, artist_name, df, similarity_matrix, num_recommendations)
+
+            if result:
+                selected = result['selected']
+                recommendations = result['recommendations']
+
+                # Display selected song with artwork and link
+                st.subheader("Selected Song")
+                col1, col2 = st.columns([1, 3])
+                with col1:
+                    st.image(selected['artwork_url'], width=150)
+                with col2:
+                    st.markdown(f"## {selected['song']} by {selected['artist']}")
+                    st.markdown(f"[Listen on YouTube Music]({selected['youtube_link']})")
+
+                st.markdown("---")
+
+                # Display recommendations
+                st.subheader("Recommended Songs")
+
+                # Custom CSS for better card layout
+                st.markdown("""
+                <style>
+                .song-card {
+                    background-color: #f8f9fa;
+                    border-radius: 10px;
+                    padding: 15px;
+                    margin-bottom: 15px;
+                    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+                }
+                </style>
+                """, unsafe_allow_html=True)
+
+                # Create a grid layout
+                cols = st.columns(2)
+                for i, rec in enumerate(recommendations):
+                    with cols[i % 2]:
+                        st.markdown("<div class='song-card'>", unsafe_allow_html=True)
+                        st.image(rec['artwork_url'], width=150)
+                        st.markdown(f"### {rec['song']}")
+                        st.markdown(f"**Artist:** {rec['artist']}")
+                        st.markdown(f"[Listen on YouTube Music]({rec['youtube_link']})")
+                        st.markdown("</div>", unsafe_allow_html=True)
+                        st.markdown(f"**Similarity Score:** {rec['similarity_score']:.5f}")
+        else:
+            st.warning("Please type or select a song.")
+
     with tab2:
         st.subheader("Popular Songs by Genre")
         
