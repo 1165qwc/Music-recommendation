@@ -390,8 +390,8 @@ def main():
         st.subheader("Songs by Mood Category")
 
         mood_options = [
-            "happy", "sad", "excited", "chill", "romantic",
-            "aggressive", "mysterious", "workout", "party", "study", "background music"
+            "Happy", "Sad", "Excited", "Chill", "Romantic",
+            "Aggressive", "Mysterious", "Workout", "Party", "Study", "Background music"
         ]
         selected_mood = st.selectbox("Choose a mood:", mood_options)
         num_mood_recommendations = st.slider("Number of recommendations:", 5, 20, 10, key="mood_slider")
@@ -400,25 +400,25 @@ def main():
             def filter_by_mood(df, mood):
                 if mood == "happy":
                     return df[(df['valence'] > 0.7) & (df['energy'] > 0.6)]
-                elif mood == "sad":
+                elif mood == "Sad":
                     return df[(df['valence'] < 0.3)]
-                elif mood == "excited":
+                elif mood == "Excited":
                     return df[(df['energy'] > 0.8) & (df['tempo'] > 120)]
-                elif mood == "chill":
+                elif mood == "Chill":
                     return df[(df['energy'] < 0.4) & (df['valence'] > 0.4)]
-                elif mood == "romantic":
+                elif mood == "Romantic":
                     return df[(df['valence'] > 0.6) & (df['acousticness'] > 0.5)]
-                elif mood == "aggressive":
+                elif mood == "Aggressive":
                     return df[(df['energy'] > 0.8) & (df['loudness'] > -5)]
-                elif mood == "mysterious":
+                elif mood == "Mysterious":
                     return df[(df['instrumentalness'] > 0.5) & (df['acousticness'] > 0.3)]
-                elif mood == "workout":
+                elif mood == "Workout":
                     return df[(df['energy'] > 0.7) & (df['tempo'] > 110)]
-                elif mood == "party":
+                elif mood == "Party":
                     return df[(df['danceability'] > 0.7) & (df['valence'] > 0.5)]
-                elif mood == "study":
+                elif mood == "Study":
                     return df[(df['instrumentalness'] > 0.6) & (df['energy'] < 0.5)]
-                elif mood == "background music":
+                elif mood == "Background music":
                     return df[(df['instrumentalness'] > 0.7)]
                 return pd.DataFrame()
 
