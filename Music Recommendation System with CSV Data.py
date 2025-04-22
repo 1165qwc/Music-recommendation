@@ -6,6 +6,10 @@ import urllib.parse
 import requests
 import json
 from sklearn.preprocessing import MinMaxScaler
+import os
+import tempfile
+from pydub import AudioSegment
+import io
 
 
 def load_data(file_path):
@@ -104,6 +108,65 @@ def get_itunes_artwork(song_name, artist_name):
         # In case of any error, return a default icon
         return "https://img.icons8.com/fluency/96/000000/musical-notes.png"
 
+def get_spotify_preview_url(song_name, artist_name):
+    """Get a preview URL for a song from Spotify API"""
+    try:
+        # Format the query parameters
+        query = f"{song_name} {artist_name}"
+        encoded_query = urllib.parse.quote(query)
+        
+        # Make a request to the Spotify Search API
+        # Note: In a production app, you would need to handle authentication properly
+        # This is a simplified example that may not work without proper API credentials
+        url = f"https://api.spotify.com/v1/search?q={encoded_query}&type=track&limit=1"
+        
+        # For demo purposes, we'll return a placeholder URL
+        # In a real implementation, you would parse the response and extract the preview_url
+        return "https://example.com/preview.mp3"
+    except Exception as e:
+        st.error(f"Error getting preview URL: {e}")
+        return None
+
+def get_itunes_preview_url(song_name, artist_name):
+    """Get a preview URL for a song from iTunes API"""
+    try:
+        # Format the query parameters
+        query = f"{song_name} {artist_name}"
+        encoded_query = urllib.parse.quote(query)
+        
+        # Make a request to the iTunes Search API
+        url = f"https://itunes.apple.com/search?term={encoded_query}&media=music&entity=song&limit=1"
+        response = requests.get(url, timeout=5)
+        
+        if response.status_code == 200:
+            data = json.loads(response.text)
+            if data["resultCount"] > 0:
+                # Get the preview URL
+                preview_url = data["results"][0].get("previewUrl")
+                if preview_url:
+                    return preview_url
+        
+        # Return None if no preview URL is found
+        return None
+    except Exception as e:
+        st.error(f"Error getting iTunes preview URL: {e}")
+        return None
+
+def get_preview_url(song_name, artist_name):
+    """Try to get a preview URL from various sources"""
+    # Try iTunes first
+    preview_url = get_itunes_preview_url(song_name, artist_name)
+    if preview_url:
+        return preview_url
+    
+    # Try Spotify as fallback
+    preview_url = get_spotify_preview_url(song_name, artist_name)
+    if preview_url:
+        return preview_url
+    
+    # If no preview URL is found, return None
+    return None
+
 def recommend_songs(song_name, artist_name, df, similarity_matrix, num_recommendations=10):
     try:
         processed_song_name = song_name.lower()
@@ -148,6 +211,7 @@ def recommend_songs(song_name, artist_name, df, similarity_matrix, num_recommend
         # Get iTunes artwork and YouTube link for selected song
         selected_artwork = get_itunes_artwork(selected_song, selected_artist)
         selected_yt_link = get_youtube_search_url(selected_song, selected_artist)
+        selected_preview_url = get_preview_url(selected_song, selected_artist)
         
         # Debug info 
         st.sidebar.write("Debug: Similarity score range")
@@ -160,9 +224,10 @@ def recommend_songs(song_name, artist_name, df, similarity_matrix, num_recommend
             rec_song = df.iloc[idx]['song']
             rec_artist = df.iloc[idx]['artist']
             
-            # Get artwork and YouTube link
+            # Get artwork, YouTube link, and preview URL
             artwork_url = get_itunes_artwork(rec_song, rec_artist)
             yt_link = get_youtube_search_url(rec_song, rec_artist)
+            preview_url = get_preview_url(rec_song, rec_artist)
             
             # Make sure to round the similarity score for display
             # Using 4 decimal places to show variation
@@ -173,6 +238,7 @@ def recommend_songs(song_name, artist_name, df, similarity_matrix, num_recommend
                 'artist': rec_artist,
                 'youtube_link': yt_link,
                 'artwork_url': artwork_url,
+                'preview_url': preview_url,
                 'similarity_score': round(float(score), 4),
                 'raw_score': score  # Add raw score for deeper debug
             })
@@ -182,7 +248,8 @@ def recommend_songs(song_name, artist_name, df, similarity_matrix, num_recommend
                 'song': selected_song,
                 'artist': selected_artist,
                 'youtube_link': selected_yt_link,
-                'artwork_url': selected_artwork
+                'artwork_url': selected_artwork,
+                'preview_url': selected_preview_url
             },
             'recommendations': recommendations
         }
@@ -232,15 +299,17 @@ def get_popular_songs_by_genre(df, genre, num_recommendations=10):
             song_name = song['song']
             artist_name = song['artist']
             
-            # Get artwork and YouTube link
+            # Get artwork, YouTube link, and preview URL
             artwork_url = get_itunes_artwork(song_name, artist_name)
             yt_link = get_youtube_search_url(song_name, artist_name)
+            preview_url = get_preview_url(song_name, artist_name)
             
             recommendations.append({
                 'song': song_name,
                 'artist': artist_name,
                 'youtube_link': yt_link,
                 'artwork_url': artwork_url,
+                'preview_url': preview_url,
                 'popularity_score': round(float(song['popularity_score']), 4),
                 'genre': genre
             })
@@ -388,6 +457,12 @@ def main():
                     with col2:
                         st.markdown(f"## {selected['song']} by {selected['artist']}")
                         st.markdown(f"[Listen on YouTube Music]({selected['youtube_link']})")
+                        
+                        # Add audio preview if available
+                        if selected['preview_url']:
+                            st.audio(selected['preview_url'])
+                        else:
+                            st.info("No audio preview available for this song.")
                     
                     st.markdown("---")
                     
@@ -416,6 +491,11 @@ def main():
                             st.markdown(f"### {rec['song']}")
                             st.markdown(f"*Artist:* {rec['artist']}")
                             st.markdown(f"[Listen on YouTube Music]({rec['youtube_link']})")
+                            
+                            # Add audio preview if available
+                            if rec['preview_url']:
+                                st.audio(rec['preview_url'])
+                            
                             st.markdown("</div>", unsafe_allow_html=True)
                             st.markdown(f"*Similarity Score:* {rec['similarity_score']:.5f}")
             else:
@@ -458,6 +538,11 @@ def main():
                             st.markdown(f"*Artist:* {rec['artist']}")
                             st.markdown(f"*Genre:* {rec['genre']}")
                             st.markdown(f"[Listen on YouTube Music]({rec['youtube_link']})")
+                            
+                            # Add audio preview if available
+                            if rec['preview_url']:
+                                st.audio(rec['preview_url'])
+                            
                             st.markdown("</div>", unsafe_allow_html=True)
                             st.markdown(f"*Popularity Score:* {rec['popularity_score']:.5f}")
                 else:
@@ -510,11 +595,18 @@ def main():
                     with cols[i % 2]:
                         artwork = get_itunes_artwork(song['song'], song['artist'])
                         yt_link = get_youtube_search_url(song['song'], song['artist'])
+                        preview_url = get_preview_url(song['song'], song['artist'])
+                        
                         st.markdown("<div class='song-card'>", unsafe_allow_html=True)
                         st.image(artwork, width=150)
                         st.markdown(f"### {song['song']}")
                         st.markdown(f"*Artist:* {song['artist']}")
                         st.markdown(f"[Listen on YouTube Music]({yt_link})")
+                        
+                        # Add audio preview if available
+                        if preview_url:
+                            st.audio(preview_url)
+                        
                         st.markdown("</div>", unsafe_allow_html=True)
 
 
