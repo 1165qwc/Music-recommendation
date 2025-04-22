@@ -289,7 +289,6 @@ from sklearn.preprocessing import MinMaxScaler
  
      with tab1:
          st.subheader("Find Similar Songs")
-         song_name = st.text_input("Enter a song name:")
          song_query = st.text_input("Enter a song name:")
  matching_titles = []
  
