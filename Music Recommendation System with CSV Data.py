@@ -253,6 +253,45 @@ def get_popular_songs_by_genre(df, genre, num_recommendations=10):
         st.error(traceback.format_exc())
         return None
 
+def get_song_suggestions(df, query, max_suggestions=10):
+    """Get song suggestions based on user input."""
+    if not query or len(query) < 1:
+        return []
+    
+    # Convert query to lowercase for case-insensitive matching
+    query = query.lower()
+    
+    # Filter songs that start with the query
+    matching_songs = df[df['song'].str.lower().str.startswith(query)]
+    
+    # If not enough matches, also include songs that contain the query
+    if len(matching_songs) < max_suggestions:
+        additional_matches = df[
+            (df['song'].str.lower().str.contains(query)) & 
+            (~df['song'].str.lower().str.startswith(query))
+        ]
+        matching_songs = pd.concat([matching_songs, additional_matches])
+    
+    # Sort by popularity if available, otherwise by song name
+    if 'popularity' in matching_songs.columns:
+        matching_songs = matching_songs.sort_values('popularity', ascending=False)
+    else:
+        matching_songs = matching_songs.sort_values('song')
+    
+    # Limit to max_suggestions
+    matching_songs = matching_songs.head(max_suggestions)
+    
+    # Format suggestions as a list of dictionaries
+    suggestions = []
+    for _, song in matching_songs.iterrows():
+        suggestions.append({
+            'song': song['song'],
+            'artist': song['artist'],
+            'display': f"{song['song']} - {song['artist']}"
+        })
+    
+    return suggestions
+
 def main():
     st.title("Music Recommendation System")
     st.write("This app recommends similar songs based on your input!")
@@ -289,11 +328,59 @@ def main():
     
     with tab1:
         st.subheader("Find Similar Songs")
-        song_name = st.text_input("Enter a song name:")
-        artist_name = st.text_input("Enter artist name (optional):")
-        num_recommendations = st.slider("Number of recommendations:", 5, 20, 10)
         
+        # Create a container for the search input and suggestions
+        search_container = st.container()
+        
+        # Initialize session state for song selection if not already present
+        if 'selected_song' not in st.session_state:
+            st.session_state.selected_song = None
+        if 'selected_artist' not in st.session_state:
+            st.session_state.selected_artist = None
+        if 'search_query' not in st.session_state:
+            st.session_state.search_query = ""
+        
+        # Create two columns for the search interface
+        col1, col2 = st.columns([3, 1])
+        
+        with col1:
+            # Text input for song search with autocomplete
+            search_query = st.text_input("Search for a song:", value=st.session_state.search_query, key="song_search")
+            
+            # Update session state
+            st.session_state.search_query = search_query
+            
+            # Get suggestions based on the search query
+            if search_query:
+                suggestions = get_song_suggestions(df, search_query)
+                
+                # Display suggestions in a selectbox
+                if suggestions:
+                    suggestion_options = [s['display'] for s in suggestions]
+                    selected_suggestion = st.selectbox(
+                        "Select a song from the suggestions:",
+                        options=[""] + suggestion_options,
+                        key="song_suggestion"
+                    )
+                    
+                    # If a suggestion is selected, update the session state
+                    if selected_suggestion:
+                        for suggestion in suggestions:
+                            if suggestion['display'] == selected_suggestion:
+                                st.session_state.selected_song = suggestion['song']
+                                st.session_state.selected_artist = suggestion['artist']
+                                break
+        
+        with col2:
+            # Optional artist name input
+            artist_name = st.text_input("Artist name (optional):", key="artist_input")
+            num_recommendations = st.slider("Number of recommendations:", 5, 20, 10)
+        
+        # Button to get recommendations
         if st.button("Get Similar Songs"):
+            # Use the selected song from suggestions if available
+            song_name = st.session_state.selected_song if st.session_state.selected_song else search_query
+            
             if song_name:
                 with st.spinner("Finding recommendations and artwork..."):
                     result = recommend_songs(song_name, artist_name, df, similarity_matrix, num_recommendations)
@@ -342,7 +429,7 @@ def main():
                             st.markdown("</div>", unsafe_allow_html=True)
                             st.markdown(f"*Similarity Score:* {rec['similarity_score']:.5f}")
             else:
-                st.warning("Please enter a song name.")
+                st.warning("Please enter a song name or select from suggestions.")
     
     with tab2:
         st.subheader("Popular Songs by Genre")
@@ -443,5 +530,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-
-
