@@ -41,7 +41,7 @@ def preprocess_data(df):
         df = pd.get_dummies(df, columns=['mode', 'genre'], drop_first=True)
 
         # Select features for similarity calculation
-        feature_list = ['danceability', 'energy', 'loudness',
+        feature_list = ['danceability', 'energy', 'key', 'loudness',
                         'speechiness', 'acousticness', 'instrumentalness',
                         'liveness', 'valence', 'tempo']
         
@@ -189,6 +189,72 @@ def recommend_songs(song_name, artist_name, df, similarity_matrix, num_recommend
         st.error(traceback.format_exc())
         return None
 
+def get_popular_songs_by_genre(df, genre, num_recommendations=10):
+    """Get popular songs from a specific genre based on popularity metrics."""
+    try:
+        # Filter songs by the selected genre
+        genre_songs = df[df['genre'] == genre].copy()
+        
+        if genre_songs.empty:
+            st.warning(f"No songs found for genre: {genre}")
+            return None
+            
+        # Create a popularity score based on multiple factors
+        # We'll use a weighted combination of danceability, energy, and valence
+        # These are good proxies for general popularity in music
+        
+        # Normalize the features to 0-1 range
+        scaler = MinMaxScaler()
+        
+        # Select features that might indicate popularity
+        popularity_features = ['danceability', 'energy', 'valence', 'loudness']
+        
+        # Make sure all features exist
+        if not all(feature in genre_songs.columns for feature in popularity_features):
+            st.error(f"Missing required features for popularity calculation")
+            return None
+            
+        # Normalize the features
+        normalized_features = scaler.fit_transform(genre_songs[popularity_features])
+        
+        # Create a popularity score (weighted average)
+        # You can adjust these weights based on what you think makes a song popular
+        weights = [0.3, 0.3, 0.2, 0.2]  # danceability, energy, valence, loudness
+        popularity_scores = np.sum(normalized_features * weights, axis=1)
+        
+        # Add the popularity score to the dataframe
+        genre_songs['popularity_score'] = popularity_scores
+        
+        # Sort by popularity score and get top N
+        top_songs = genre_songs.nlargest(num_recommendations, 'popularity_score')
+        
+        # Get artwork and YouTube links for each song
+        recommendations = []
+        for _, song in top_songs.iterrows():
+            song_name = song['song']
+            artist_name = song['artist']
+            
+            # Get artwork and YouTube link
+            artwork_url = get_itunes_artwork(song_name, artist_name)
+            yt_link = get_youtube_search_url(song_name, artist_name)
+            
+            recommendations.append({
+                'song': song_name,
+                'artist': artist_name,
+                'youtube_link': yt_link,
+                'artwork_url': artwork_url,
+                'popularity_score': round(float(song['popularity_score']), 4),
+                'genre': genre
+            })
+            
+        return recommendations
+        
+    except Exception as e:
+        st.error(f"Error getting popular songs by genre: {e}")
+        import traceback
+        st.error(traceback.format_exc())
+        return None
+
 def main():
     st.title("Music Recommendation System")
     st.write("This app recommends similar songs based on your input!")
@@ -202,7 +268,7 @@ def main():
     st.sidebar.subheader("Dataset Information")
     st.sidebar.write(f"Number of songs: {len(df)}")
     st.sidebar.write(f"Dataset shape: {df.shape}")
-
+    
     # Preprocess data and calculate similarity matrix
     with st.spinner("Preprocessing data..."):
         result = preprocess_data(df)
@@ -219,62 +285,116 @@ def main():
         
         # Confirm matrix dimensions match dataframe
         st.sidebar.write(f"Similarity matrix shape: {similarity_matrix.shape}")
-
-    song_name = st.text_input("Enter a song name:")
-    artist_name = st.text_input("Enter artist name (optional):")
-    num_recommendations = st.slider("Number of recommendations:", 5, 20, 10)
-
-    if st.button("Get Recommendations"):
-        if song_name:
-            with st.spinner("Finding recommendations and artwork..."):
-                result = recommend_songs(song_name, artist_name, df, similarity_matrix, num_recommendations)
-                
-            if result:
-                selected = result['selected']
-                recommendations = result['recommendations']
-                
-                # Display selected song with artwork and link
-                st.subheader("Selected Song")
-                
-                col1, col2 = st.columns([1, 3])
-                with col1:
-                    st.image(selected['artwork_url'], width=150)
-                with col2:
-                    st.markdown(f"## {selected['song']} by {selected['artist']}")
-                    st.markdown(f"[Listen on YouTube Music]({selected['youtube_link']})")
-                
-                st.markdown("---")
-                
-                # Display recommendations
-                st.subheader("Recommended Songs")
-                
-                # Custom CSS for better card layout
-                st.markdown("""
-                <style>
-                .song-card {
-                    background-color: #f8f9fa;
-                    border-radius: 10px;
-                    padding: 15px;
-                    margin-bottom: 15px;
-                    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-                }
-                </style>
-                """, unsafe_allow_html=True)
-                
-                # Create a grid layout
-                cols = st.columns(2)
-                for i, rec in enumerate(recommendations):
-                    with cols[i % 2]:
-                        st.markdown("<div class='song-card'>", unsafe_allow_html=True)
-                        st.image(rec['artwork_url'], width=150)
-                        st.markdown(f"### {rec['song']}")
-                        st.markdown(f"**Artist:** {rec['artist']}")
-                        st.markdown(f"[Listen on YouTube Music]({rec['youtube_link']})")
-                        st.markdown("</div>", unsafe_allow_html=True)
-                        st.markdown(f"**Similarity Score:** {rec['similarity_score']:.5f}")
-
+    
+    # Create tabs for different recommendation methods
+    tab1, tab2 = st.tabs(["Similar Songs", "Popular by Genre"])
+    
+    with tab1:
+        st.subheader("Find Similar Songs")
+        song_name = st.text_input("Enter a song name:")
+        artist_name = st.text_input("Enter artist name (optional):")
+        num_recommendations = st.slider("Number of recommendations:", 5, 20, 10)
+        
+        if st.button("Get Similar Songs"):
+            if song_name:
+                with st.spinner("Finding recommendations and artwork..."):
+                    result = recommend_songs(song_name, artist_name, df, similarity_matrix, num_recommendations)
+                    
+                if result:
+                    selected = result['selected']
+                    recommendations = result['recommendations']
+                    
+                    # Display selected song with artwork and link
+                    st.subheader("Selected Song")
+                    
+                    col1, col2 = st.columns([1, 3])
+                    with col1:
+                        st.image(selected['artwork_url'], width=150)
+                    with col2:
+                        st.markdown(f"## {selected['song']} by {selected['artist']}")
+                        st.markdown(f"[Listen on YouTube Music]({selected['youtube_link']})")
+                    
+                    st.markdown("---")
+                    
+                    # Display recommendations
+                    st.subheader("Recommended Songs")
+                    
+                    # Custom CSS for better card layout
+                    st.markdown("""
+                    <style>
+                    .song-card {
+                        background-color: #f8f9fa;
+                        border-radius: 10px;
+                        padding: 15px;
+                        margin-bottom: 15px;
+                        box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+                    }
+                    </style>
+                    """, unsafe_allow_html=True)
+                    
+                    # Create a grid layout
+                    cols = st.columns(2)
+                    for i, rec in enumerate(recommendations):
+                        with cols[i % 2]:
+                            st.markdown("<div class='song-card'>", unsafe_allow_html=True)
+                            st.image(rec['artwork_url'], width=150)
+                            st.markdown(f"### {rec['song']}")
+                            st.markdown(f"**Artist:** {rec['artist']}")
+                            st.markdown(f"[Listen on YouTube Music]({rec['youtube_link']})")
+                            st.markdown("</div>", unsafe_allow_html=True)
+                            st.markdown(f"**Similarity Score:** {rec['similarity_score']:.5f}")
+            else:
+                st.warning("Please enter a song name.")
+    
+    with tab2:
+        st.subheader("Popular Songs by Genre")
+        
+        # Get unique genres from the dataset
+        if 'genre' in df.columns:
+            genres = sorted(df['genre'].unique().tolist())
+            
+            # Add a "All Genres" option
+            genres.insert(0, "All Genres")
+            
+            selected_genre = st.selectbox("Select a genre:", genres)
+            num_genre_recommendations = st.slider("Number of recommendations:", 5, 20, 10, key="genre_slider")
+            
+            if st.button("Get Popular Songs"):
+                with st.spinner("Finding popular songs..."):
+                    if selected_genre == "All Genres":
+                        # Get popular songs from all genres
+                        all_recommendations = []
+                        for genre in genres[1:]:  # Skip "All Genres"
+                            genre_recs = get_popular_songs_by_genre(df, genre, num_genre_recommendations // len(genres[1:]) + 1)
+                            if genre_recs:
+                                all_recommendations.extend(genre_recs)
+                        
+                        # Sort by popularity score and take top N
+                        all_recommendations.sort(key=lambda x: x['popularity_score'], reverse=True)
+                        recommendations = all_recommendations[:num_genre_recommendations]
+                    else:
+                        # Get popular songs from the selected genre
+                        recommendations = get_popular_songs_by_genre(df, selected_genre, num_genre_recommendations)
+                    
+                    if recommendations:
+                        st.subheader(f"Popular {selected_genre} Songs")
+                        
+                        # Create a grid layout
+                        cols = st.columns(2)
+                        for i, rec in enumerate(recommendations):
+                            with cols[i % 2]:
+                                st.markdown("<div class='song-card'>", unsafe_allow_html=True)
+                                st.image(rec['artwork_url'], width=150)
+                                st.markdown(f"### {rec['song']}")
+                                st.markdown(f"**Artist:** {rec['artist']}")
+                                st.markdown(f"**Genre:** {rec['genre']}")
+                                st.markdown(f"[Listen on YouTube Music]({rec['youtube_link']})")
+                                st.markdown("</div>", unsafe_allow_html=True)
+                                st.markdown(f"**Popularity Score:** {rec['popularity_score']:.5f}")
+                    else:
+                        st.warning(f"No recommendations found for {selected_genre}.")
         else:
-            st.warning("Please enter a song name.")
+            st.error("Genre information not available in the dataset.")
 
 if __name__ == "__main__":
     main()
