@@ -1,11 +1,11 @@
 import pandas as pd
- from sklearn.metrics.pairwise import cosine_similarity
- import numpy as np
- import streamlit as st
- import urllib.parse
- import requests
- import json
- from sklearn.preprocessing import MinMaxScaler
+from sklearn.metrics.pairwise import cosine_similarity
+import numpy as np
+import streamlit as st
+import urllib.parse
+import requests
+import json
+from sklearn.preprocessing import MinMaxScaler
  
  
  def load_data(file_path):
