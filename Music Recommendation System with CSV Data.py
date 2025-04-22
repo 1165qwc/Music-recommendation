@@ -6,8 +6,6 @@ import urllib.parse
 import requests
 import json
 from sklearn.preprocessing import MinMaxScaler
-import traceback
-
 
 def load_data(file_path):
     try:
@@ -19,7 +17,6 @@ def load_data(file_path):
     except Exception as e:
         st.error(f"Error loading data: {e}")
         return None
-
 
 def preprocess_data(df):
     try:
@@ -56,10 +53,12 @@ def preprocess_data(df):
 
         return df, df_features, all_genres
 
+    except KeyError as e:
+        st.error(f"Error: Key not found in DataFrame: {e}")
+        return None
     except Exception as e:
         st.error(f"Error preprocessing data: {e}")
         return None
-
 
 def calculate_similarity(df_features):
     try:
@@ -69,12 +68,10 @@ def calculate_similarity(df_features):
         st.error(f"Error calculating similarity: {e}")
         return None
 
-
 def get_youtube_search_url(song_name, artist_name):
     query = f"{song_name} {artist_name} official audio"
     encoded_query = urllib.parse.quote(query)
     return f"https://music.youtube.com/search?q={encoded_query}"
-
 
 def get_itunes_artwork(song_name, artist_name):
     try:
@@ -88,11 +85,9 @@ def get_itunes_artwork(song_name, artist_name):
             if data["resultCount"] > 0:
                 artwork_url = data["results"][0]["artworkUrl100"].replace('100x100', '300x300')
                 return artwork_url
-
         return "https://img.icons8.com/fluency/96/000000/musical-notes.png"
-    except Exception as e:
+    except Exception:
         return "https://img.icons8.com/fluency/96/000000/musical-notes.png"
-
 
 def recommend_songs(song_name, artist_name, df, similarity_matrix, num_recommendations=10):
     try:
@@ -101,8 +96,7 @@ def recommend_songs(song_name, artist_name, df, similarity_matrix, num_recommend
 
         if artist_name:
             comparison_result = (df['song'].str.lower().str.contains(processed_song_name)) & (
-                df['artist'].str.lower().str.contains(processed_artist_name)
-            )
+                df['artist'].str.lower().str.contains(processed_artist_name))
         else:
             comparison_result = df['song'].str.lower().str.contains(processed_song_name)
 
@@ -115,7 +109,7 @@ def recommend_songs(song_name, artist_name, df, similarity_matrix, num_recommend
         selected_song_index = matching_songs.index[0]
 
         if selected_song_index >= similarity_matrix.shape[0]:
-            st.error(f"Index error: Selected song index {selected_song_index} is out of bounds")
+            st.error(f"Index error: Selected song index {selected_song_index} is out of bounds.")
             return None
 
         selected_song = matching_songs.iloc[0]['song']
@@ -124,7 +118,6 @@ def recommend_songs(song_name, artist_name, df, similarity_matrix, num_recommend
         similarity_scores = similarity_matrix[selected_song_index]
         similar_song_indices = np.argsort(similarity_scores)[::-1]
         similar_song_indices = [idx for idx in similar_song_indices if idx != selected_song_index and idx < len(df)]
-
         top_n_indices = similar_song_indices[:min(num_recommendations, len(similar_song_indices))]
 
         selected_artwork = get_itunes_artwork(selected_song, selected_artist)
@@ -142,6 +135,7 @@ def recommend_songs(song_name, artist_name, df, similarity_matrix, num_recommend
             artwork_url = get_itunes_artwork(rec_song, rec_artist)
             yt_link = get_youtube_search_url(rec_song, rec_artist)
             score = similarity_scores[idx]
+
             recommendations.append({
                 'song': rec_song,
                 'artist': rec_artist,
@@ -162,14 +156,13 @@ def recommend_songs(song_name, artist_name, df, similarity_matrix, num_recommend
         }
     except Exception as e:
         st.error(f"Error recommending songs: {e}")
+        import traceback
         st.error(traceback.format_exc())
         return None
-
 
 def get_popular_songs_by_genre(df, genre, num_recommendations=10):
     try:
         genre_songs = df[df['genres'].apply(lambda x: genre in x)].copy()
-
         if genre_songs.empty:
             st.warning(f"No songs found for genre: {genre}")
             return None
@@ -208,9 +201,9 @@ def get_popular_songs_by_genre(df, genre, num_recommendations=10):
 
     except Exception as e:
         st.error(f"Error getting popular songs by genre: {e}")
+        import traceback
         st.error(traceback.format_exc())
         return None
-
 
 def main():
     st.title("Music Recommendation System")
@@ -230,37 +223,27 @@ def main():
         if result is None:
             return
         df, df_features, all_genres = result
-        st.sidebar.write(f"After preprocessing: {len(df)} songs")
 
-        similarity_matrix = calculate_similarity(df_features)
-        if similarity_matrix is None:
-            return
+    st.sidebar.write(f"After preprocessing: {len(df)} songs")
 
-        st.sidebar.write(f"Similarity matrix shape: {similarity_matrix.shape}")
+    similarity_matrix = calculate_similarity(df_features)
+    if similarity_matrix is None:
+        return
+
+    st.sidebar.write(f"Similarity matrix shape: {similarity_matrix.shape}")
 
     tab1, tab2 = st.tabs(["Similar Songs", "Popular by Genre"])
 
     with tab1:
         st.subheader("Find Similar Songs")
-        song_query = st.text_input("Enter a song name:")
+        song_name = st.text_input("Enter a song name:")
+        artist_name = st.text_input("Enter artist name (optional):")
+        num_recommendations = st.slider("Number of recommendations:", 5, 20, 10)
 
-        if song_query:
-            matching_titles = df[df['song'].str.lower().str.startswith(song_query.lower())]['song'].unique()
-            matching_titles = sorted(matching_titles)[:10]
-
-            if matching_titles.any():
-                st.markdown("**Suggestions:**")
-                for title in matching_titles:
-                    st.markdown(f"- {title}")
-
-            artist_name = st.text_input("Enter artist name (optional):")
-            num_recommendations = st.slider("Number of recommendations:", 5, 20, 10)
-
-            if st.button("Get Similar Songs"):
-                if song_query:
-                    with st.spinner("Finding recommendations and artwork..."):
-                        result = recommend_songs(song_query, artist_name, df, similarity_matrix, num_recommendations)
-
+        if st.button("Get Similar Songs"):
+            if song_name:
+                with st.spinner("Finding recommendations and artwork..."):
+                    result = recommend_songs(song_name, artist_name, df, similarity_matrix, num_recommendations)
                     if result:
                         selected = result['selected']
                         recommendations = result['recommendations']
@@ -275,7 +258,6 @@ def main():
 
                         st.markdown("---")
                         st.subheader("Recommended Songs")
-
                         st.markdown("""
                         <style>
                         .song-card {
@@ -298,8 +280,8 @@ def main():
                                 st.markdown(f"[Listen on YouTube Music]({rec['youtube_link']})")
                                 st.markdown("</div>", unsafe_allow_html=True)
                                 st.markdown(f"**Similarity Score:** {rec['similarity_score']:.5f}")
-                else:
-                    st.warning("Please enter a song name.")
+            else:
+                st.warning("Please enter a song name.")
 
     with tab2:
         st.subheader("Popular Songs by Genre")
@@ -314,7 +296,6 @@ def main():
                         genre_recs = get_popular_songs_by_genre(df, genre, num_genre_recommendations // len(all_genres) + 1)
                         if genre_recs:
                             all_recommendations.extend(genre_recs)
-
                     all_recommendations.sort(key=lambda x: x['popularity_score'], reverse=True)
                     recommendations = all_recommendations[:num_genre_recommendations]
                 else:
@@ -335,7 +316,6 @@ def main():
                             st.markdown(f"**Popularity Score:** {rec['popularity_score']:.5f}")
                 else:
                     st.warning(f"No recommendations found for {selected_genre}.")
-
 
 if __name__ == "__main__":
     main()
