@@ -285,7 +285,7 @@ def main():
         st.sidebar.write(f"Similarity matrix shape: {similarity_matrix.shape}")
     
     # Create tabs for different recommendation methods
-    tab1, tab2, tap3 = st.tabs(["Similar Songs", "Popular by Genre", "Mood Songs"])
+    tab1, tab2, tab3 = st.tabs(["Similar Songs", "Popular by Genre", "Mood Songs"])
     
     with tab1:
         st.subheader("Find Similar Songs")
