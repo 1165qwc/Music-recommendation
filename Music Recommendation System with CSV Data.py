@@ -637,6 +637,8 @@ def main():
             st.session_state.current_artist = None
         if 'playlist_search_query' not in st.session_state:
             st.session_state.playlist_search_query = ""
+        if 'playlist_updated' not in st.session_state:
+            st.session_state.playlist_updated = False
         
         # Create two columns for the search interface
         col1, col2 = st.columns([3, 1])
@@ -695,13 +697,14 @@ def main():
                         'preview_url': preview_url
                     })
                     
+                    # Update current song and mark playlist as updated
+                    st.session_state.current_song = song_name
+                    st.session_state.current_artist = artist_name
+                    st.session_state.playlist_updated = True
+                    
                     st.success(f"Added '{song_name}' by {artist_name} to your playlist!")
                 else:
                     st.warning(f"'{song_name}' by {artist_name} is already in your playlist.")
-                
-                # Update the current song for next recommendations
-                st.session_state.current_song = song_name
-                st.session_state.current_artist = artist_name
             else:
                 st.warning("Please select a song from the dropdown.")
         
@@ -723,6 +726,17 @@ def main():
                     if song['preview_url']:
                         st.audio(song['preview_url'])
                     
+                    # Add remove button for each song
+                    if st.button(f"Remove", key=f"remove_{i}"):
+                        st.session_state.playlist.pop(i)
+                        st.session_state.playlist_updated = True
+                        if st.session_state.playlist:
+                            st.session_state.current_song = st.session_state.playlist[-1]['song']
+                            st.session_state.current_artist = st.session_state.playlist[-1]['artist']
+                        else:
+                            st.session_state.current_song = None
+                            st.session_state.current_artist = None
+                    
                     st.markdown("</div>", unsafe_allow_html=True)
             
             # Button to clear the playlist
@@ -731,6 +745,7 @@ def main():
                 st.session_state.current_song = None
                 st.session_state.current_artist = None
                 st.session_state.playlist_search_query = ""
+                st.session_state.playlist_updated = True
         
         # Get recommendations for the next song in the playlist
         if st.session_state.current_song and st.session_state.current_artist:
@@ -763,6 +778,7 @@ def main():
                                     st.session_state.playlist.append(rec)
                                     st.session_state.current_song = rec['song']
                                     st.session_state.current_artist = rec['artist']
+                                    st.session_state.playlist_updated = True
                                     st.success(f"Added '{rec['song']}' by {rec['artist']} to your playlist!")
                                 else:
                                     st.warning(f"'{rec['song']}' by {rec['artist']} is already in your playlist.")
