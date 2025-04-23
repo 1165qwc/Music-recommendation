@@ -46,10 +46,10 @@ def preprocess_data(df):
         # Create a list of all unique genres
         all_genres = sorted(list(set([genre for genres in df['genres'] for genre in genres])))
         
-        # One-hot encode 'mode'
-        df = pd.get_dummies(df, columns=['mode'], drop_first=True)
-
-        # Calculate derived features
+        # Ensure mode is numeric (0 for minor, 1 for major)
+        df['mode'] = df['mode'].astype(int)
+        
+        # Calculate derived features before one-hot encoding
         df['rhythm_complexity'] = df.apply(lambda x: (x['tempo'] / 120) * (x.get('time_signature', 4) / 4), axis=1)
         df['harmonic_complexity'] = df.apply(lambda x: ((1 - x['mode']) * 0.4 + x['instrumentalness'] * 0.4 + (1 - x['acousticness']) * 0.2), axis=1)
         df['dynamic_range'] = df.apply(lambda x: ((x['loudness'] + 60) / 60 + x['energy']) / 2, axis=1)
@@ -78,7 +78,7 @@ def preprocess_data(df):
             return None
 
         # Extract features and normalize
-        df_features = df[feature_list]
+        df_features = df[feature_list].copy()
         scaler = MinMaxScaler()
         df_features = pd.DataFrame(scaler.fit_transform(df_features), columns=feature_list)
         
@@ -90,6 +90,8 @@ def preprocess_data(df):
 
     except Exception as e:
         st.error(f"Error preprocessing data: {e}")
+        import traceback
+        st.error(traceback.format_exc())
         return None
 
 def calculate_similarity(df_features):
