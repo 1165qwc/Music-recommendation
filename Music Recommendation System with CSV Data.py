@@ -11,7 +11,6 @@ import tempfile
 from pydub import AudioSegment
 import io
 
-
 def load_data(file_path):
     try:
         df = pd.read_csv(file_path)
@@ -357,6 +356,23 @@ def get_song_suggestions(df, query, max_suggestions=10):
     
     return suggestions
 
+def create_playlist_step(df, similarity_matrix, current_song, current_artist, num_recommendations=5):
+    """Get recommendations for the next song in the playlist"""
+    try:
+        if not current_song or not current_artist:
+            return None
+            
+        # Get recommendations based on the current song
+        result = recommend_songs(current_song, current_artist, df, similarity_matrix, num_recommendations)
+        
+        if result:
+            return result['recommendations']
+        else:
+            return None
+    except Exception as e:
+        st.error(f"Error getting playlist recommendations: {e}")
+        return None
+
 def main():
     st.title("Music Recommendation System")
     st.write("This app recommends similar songs based on your input!")
@@ -389,7 +405,7 @@ def main():
         st.sidebar.write(f"Similarity matrix shape: {similarity_matrix.shape}")
     
     # Create tabs for different recommendation methods
-    tab1, tab2, tab3 = st.tabs(["Similar Songs", "Popular by Genre", "Mood Songs"])
+    tab1, tab2, tab3, tab4 = st.tabs(["Similar Songs", "Popular by Genre", "Mood Songs", "Create Playlist"])
     
     with tab1:
         st.subheader("Find Similar Songs")
@@ -608,6 +624,150 @@ def main():
                             st.audio(preview_url)
                         
                         st.markdown("</div>", unsafe_allow_html=True)
+    
+    with tab4:
+        st.subheader("Create Your Playlist")
+        
+        # Initialize session state for playlist if not already present
+        if 'playlist' not in st.session_state:
+            st.session_state.playlist = []
+        if 'current_song' not in st.session_state:
+            st.session_state.current_song = None
+        if 'current_artist' not in st.session_state:
+            st.session_state.current_artist = None
+        if 'playlist_search_query' not in st.session_state:
+            st.session_state.playlist_search_query = ""
+        
+        # Create two columns for the search interface
+        col1, col2 = st.columns([3, 1])
+        
+        with col1:
+            # Get all song names for autocomplete
+            all_songs = [f"{row['song']} - {row['artist']}" for _, row in df.iterrows()]
+            
+            # Use selectbox for song search with autocomplete
+            search_query = st.selectbox(
+                "Search for a song to start your playlist:",
+                options=[""] + all_songs,
+                key="playlist_song_search"
+            )
+            
+            # Update session state
+            st.session_state.playlist_search_query = search_query
+            
+            # If a song is selected, extract song name and artist
+            if search_query:
+                parts = search_query.split(" - ", 1)
+                if len(parts) == 2:
+                    st.session_state.current_song = parts[0]
+                    st.session_state.current_artist = parts[1]
+        
+        with col2:
+            # Optional artist name input (pre-filled if selected from autocomplete)
+            artist_name = st.text_input(
+                "Artist name (optional):", 
+                value=st.session_state.current_artist if st.session_state.current_artist else "",
+                key="playlist_artist_input"
+            )
+            num_recommendations = st.slider("Number of recommendations per step:", 3, 10, 5, key="playlist_recommendations")
+        
+        # Button to start or continue building the playlist
+        if st.button("Add Song to Playlist"):
+            # Use the selected song from autocomplete if available
+            song_name = st.session_state.current_song if st.session_state.current_song else search_query.split(" - ")[0] if search_query else None
+            
+            if song_name:
+                # Add the song to the playlist if it's not already there
+                song_exists = any(item['song'] == song_name and item['artist'] == artist_name for item in st.session_state.playlist)
+                
+                if not song_exists:
+                    # Get artwork, YouTube link, and preview URL
+                    artwork_url = get_itunes_artwork(song_name, artist_name)
+                    yt_link = get_youtube_search_url(song_name, artist_name)
+                    preview_url = get_preview_url(song_name, artist_name)
+                    
+                    # Add to playlist
+                    st.session_state.playlist.append({
+                        'song': song_name,
+                        'artist': artist_name,
+                        'youtube_link': yt_link,
+                        'artwork_url': artwork_url,
+                        'preview_url': preview_url
+                    })
+                    
+                    st.success(f"Added '{song_name}' by {artist_name} to your playlist!")
+                else:
+                    st.warning(f"'{song_name}' by {artist_name} is already in your playlist.")
+                
+                # Update the current song for next recommendations
+                st.session_state.current_song = song_name
+                st.session_state.current_artist = artist_name
+            else:
+                st.warning("Please select a song from the dropdown.")
+        
+        # Display the current playlist
+        if st.session_state.playlist:
+            st.subheader("Your Playlist")
+            
+            # Create a grid layout for the playlist
+            cols = st.columns(2)
+            for i, song in enumerate(st.session_state.playlist):
+                with cols[i % 2]:
+                    st.markdown("<div class='song-card'>", unsafe_allow_html=True)
+                    st.image(song['artwork_url'], width=150)
+                    st.markdown(f"### {song['song']}")
+                    st.markdown(f"*Artist:* {song['artist']}")
+                    st.markdown(f"[Listen on YouTube Music]({song['youtube_link']})")
+                    
+                    # Add audio preview if available
+                    if song['preview_url']:
+                        st.audio(song['preview_url'])
+                    
+                    st.markdown("</div>", unsafe_allow_html=True)
+            
+            # Button to clear the playlist
+            if st.button("Clear Playlist"):
+                st.session_state.playlist = []
+                st.experimental_rerun()
+        
+        # Get recommendations for the next song in the playlist
+        if st.session_state.current_song and st.session_state.current_artist:
+            with st.spinner("Finding recommendations for your next song..."):
+                recommendations = create_playlist_step(df, similarity_matrix, st.session_state.current_song, st.session_state.current_artist, num_recommendations)
+                
+                if recommendations:
+                    st.subheader("Recommended Next Songs")
+                    
+                    # Create a grid layout for recommendations
+                    cols = st.columns(2)
+                    for i, rec in enumerate(recommendations):
+                        with cols[i % 2]:
+                            st.markdown("<div class='song-card'>", unsafe_allow_html=True)
+                            st.image(rec['artwork_url'], width=150)
+                            st.markdown(f"### {rec['song']}")
+                            st.markdown(f"*Artist:* {rec['artist']}")
+                            st.markdown(f"[Listen on YouTube Music]({rec['youtube_link']})")
+                            
+                            # Add audio preview if available
+                            if rec['preview_url']:
+                                st.audio(rec['preview_url'])
+                            
+                            # Button to add this song to the playlist
+                            if st.button(f"Add to Playlist", key=f"add_{i}"):
+                                # Check if song is already in playlist
+                                song_exists = any(item['song'] == rec['song'] and item['artist'] == rec['artist'] for item in st.session_state.playlist)
+                                
+                                if not song_exists:
+                                    st.session_state.playlist.append(rec)
+                                    st.session_state.current_song = rec['song']
+                                    st.session_state.current_artist = rec['artist']
+                                    st.success(f"Added '{rec['song']}' by {rec['artist']} to your playlist!")
+                                    st.experimental_rerun()
+                                else:
+                                    st.warning(f"'{rec['song']}' by {rec['artist']} is already in your playlist.")
+                            
+                            st.markdown("</div>", unsafe_allow_html=True)
+                            st.markdown(f"*Similarity Score:* {rec['similarity_score']:.5f}")
 
 
 if __name__ == "__main__":
