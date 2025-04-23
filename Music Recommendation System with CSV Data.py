@@ -728,7 +728,9 @@ def main():
             # Button to clear the playlist
             if st.button("Clear Playlist"):
                 st.session_state.playlist = []
-                st.experimental_rerun()
+                st.session_state.current_song = None
+                st.session_state.current_artist = None
+                st.session_state.playlist_search_query = ""
         
         # Get recommendations for the next song in the playlist
         if st.session_state.current_song and st.session_state.current_artist:
@@ -762,7 +764,6 @@ def main():
                                     st.session_state.current_song = rec['song']
                                     st.session_state.current_artist = rec['artist']
                                     st.success(f"Added '{rec['song']}' by {rec['artist']} to your playlist!")
-                                    st.experimental_rerun()
                                 else:
                                     st.warning(f"'{rec['song']}' by {rec['artist']} is already in your playlist.")
                             
