@@ -10,7 +10,6 @@ import os
 import tempfile
 from pydub import AudioSegment
 import io
-import audio_analysis as aa
 
 def load_data(file_path):
     try:
@@ -406,7 +405,7 @@ def main():
         st.sidebar.write(f"Similarity matrix shape: {similarity_matrix.shape}")
     
     # Create tabs for different recommendation methods
-    tab1, tab2, tab3, tab4, tab5 = st.tabs(["Similar Songs", "Popular by Genre", "Mood Songs", "Create Playlist", "Audio Analysis"])
+    tab1, tab2, tab3, tab4 = st.tabs(["Similar Songs", "Popular by Genre", "Mood Songs", "Create Playlist"])
     
     with tab1:
         st.subheader("Find Similar Songs")
@@ -786,73 +785,6 @@ def main():
                             
                             st.markdown("</div>", unsafe_allow_html=True)
                             st.markdown(f"*Similarity Score:* {rec['similarity_score']:.5f}")
-
-    with tab5:
-        st.subheader("Advanced Audio Analysis")
-        
-        # Get all song names for selection
-        all_songs = [f"{row['song']} - {row['artist']}" for _, row in df.iterrows()]
-        
-        # Song selection
-        selected_song = st.selectbox(
-            "Select a song for audio analysis:",
-            options=[""] + all_songs,
-            key="audio_analysis_song"
-        )
-        
-        if selected_song:
-            # Extract song name and artist
-            parts = selected_song.split(" - ", 1)
-            song_name = parts[0]
-            artist_name = parts[1]
-            
-            # Find the song in the dataframe
-            song_data = df[(df['song'] == song_name) & (df['artist'] == artist_name)].iloc[0]
-            
-            # Perform audio analysis
-            with st.spinner("Analyzing audio features..."):
-                features = aa.analyze_audio_features(song_data)
-                
-                if features:
-                    # Display song characteristics
-                    st.subheader("Song Characteristics")
-                    characteristics = aa.get_song_characteristics(features)
-                    for char in characteristics:
-                        st.write(f"• {char}")
-                    
-                    # Display audio features visualization
-                    st.subheader("Audio Features Analysis")
-                    fig = aa.visualize_audio_features(features, song_name)
-                    if fig:
-                        st.pyplot(fig)
-                    
-                    # Find similar songs based on audio features
-                    st.subheader("Similar Songs (by Audio Features)")
-                    similar_songs = aa.find_similar_songs_by_audio_features(df, features, num_recommendations=5)
-                    
-                    if similar_songs is not None:
-                        # Create a grid layout for similar songs
-                        cols = st.columns(2)
-                        for i, (_, song) in enumerate(similar_songs.iterrows()):
-                            with cols[i % 2]:
-                                st.markdown("<div class='song-card'>", unsafe_allow_html=True)
-                                
-                                # Get artwork and YouTube link
-                                artwork_url = get_itunes_artwork(song['song'], song['artist'])
-                                yt_link = get_youtube_search_url(song['song'], song['artist'])
-                                preview_url = get_preview_url(song['song'], song['artist'])
-                                
-                                st.image(artwork_url, width=150)
-                                st.markdown(f"### {song['song']}")
-                                st.markdown(f"*Artist:* {song['artist']}")
-                                st.markdown(f"[Listen on YouTube Music]({yt_link})")
-                                
-                                # Add audio preview if available
-                                if preview_url:
-                                    st.audio(preview_url)
-                                
-                                st.markdown("</div>", unsafe_allow_html=True)
-                                st.markdown(f"*Similarity Score:* {similar_songs.iloc[i]['similarity_score']:.5f}")
 
 
 if __name__ == "__main__":
