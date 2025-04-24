@@ -1,7 +1,6 @@
 artist,song,duration_ms,year,popularity,danceability,energy,key,loudness,mode,speechiness,acousticness,instrumentalness,liveness,valence,tempo,genre
 Faith Hill,Breathe,250546,1999,66,0.529,0.496,7,-9.007,1,0.029,0.173,0,0.251,0.278,136.859,"Pop, Country"
 Bon Jovi,It's My Life,224493,2000,78,0.551,0.913,0,-4.063,0,0.0466,0.0263,1.35E-05,0.347,0.544,119.992,"Rock, Metal"
-*NSYNC,Bye Bye Bye,200560,2000,65,0.614,0.928,8,-4.806,0,0.0516,0.0408,0.00104,0.0845,0.879,172.656,Pop
 Sisqo,Thong Song,253733,1999,69,0.706,0.888,2,-6.959,1,0.0654,0.119,9.64E-05,0.07,0.714,121.549,"Hip-hop, Pop, R&B"
 Eminem,The Real Slim Shady,284200,2000,86,0.949,0.661,5,-4.244,0,0.0572,0.0302,0,0.0454,0.76,104.504,Hip-hop
 Robbie Williams,Rock DJ,258560,2000,68,0.708,0.772,7,-4.264,1,0.0322,0.0267,0,0.467,0.861,103.035,"Pop, Rock"
