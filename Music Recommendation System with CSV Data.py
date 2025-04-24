@@ -381,15 +381,15 @@ def main():
     st.markdown("""
     <style>
     /* Light mode colors */
-    :root {
-        --card-bg-light: #f8f9fa;
-        --card-shadow-light: rgba(0,0,0,0.1);
-        --card-shadow-hover-light: rgba(0,0,0,0.2);
-        --text-color-light: #333333;
-        --preview-bg-light: #f5f5f5;
-        --badge-bg-light: #e3f2fd;
-        --badge-text-light: #1976d2;
-    }
+        :root {
+            --card-bg-light: #2d2d2d;
+            --card-shadow-light: rgba(0,0,0,0.3);
+            --card-shadow-hover-light: rgba(0,0,0,0.4);
+            --text-color-light: #ffffff;
+            --preview-bg-light: #1a1a1a;
+            --badge-bg-light: #1a237e;
+            --badge-text-light: #bbdefb;
+        }
 
     /* Dark mode colors */
     @media (prefers-color-scheme: dark) {
