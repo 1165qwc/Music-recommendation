@@ -408,7 +408,7 @@ def main():
         background-color: var(--card-bg-light);
         border-radius: 10px;
         padding: 20px;
-        margin-bottom: 20px;
+        margin-bottom: 30px;
         box-shadow: 0 2px 5px var(--card-shadow-light);
         transition: transform 0.2s;
         color: var(--text-color-light);
@@ -464,6 +464,7 @@ def main():
 
     .preview-container {
         margin-top: 15px;
+        margin-bottom: 25px;
         padding: 10px;
         background-color: var(--preview-bg-light);
         border-radius: 5px;
