@@ -46,78 +46,32 @@ def preprocess_data(df):
         # Create a list of all unique genres
         all_genres = sorted(list(set([genre for genres in df['genres'] for genre in genres])))
         
-        # Ensure mode is numeric (0 for minor, 1 for major)
-        df['mode'] = df['mode'].astype(int)
-        
-        # Calculate derived features before one-hot encoding
-        df['rhythm_complexity'] = df.apply(lambda x: (x['tempo'] / 120) * (x.get('time_signature', 4) / 4), axis=1)
-        df['harmonic_complexity'] = df.apply(lambda x: ((1 - x['mode']) * 0.4 + x['instrumentalness'] * 0.4 + (1 - x['acousticness']) * 0.2), axis=1)
-        df['dynamic_range'] = df.apply(lambda x: ((x['loudness'] + 60) / 60 + x['energy']) / 2, axis=1)
-        
-        # Select features for similarity calculation with weights
-        feature_weights = {
-            'tempo': 0.15,
-            'key': 0.10,
-            'mode': 0.10,
-            'danceability': 0.10,
-            'energy': 0.10,
-            'valence': 0.10,
-            'acousticness': 0.08,
-            'instrumentalness': 0.08,
-            'liveness': 0.05,
-            'speechiness': 0.05,
-            'rhythm_complexity': 0.04,
-            'harmonic_complexity': 0.03,
-            'dynamic_range': 0.02
-        }
-        
-        feature_list = list(feature_weights.keys())
+        # One-hot encode 'mode'
+        df = pd.get_dummies(df, columns=['mode'], drop_first=True)
+
+        # Select features for similarity calculation
+        feature_list = ['danceability', 'energy', 'key', 'loudness',
+                       'speechiness', 'acousticness', 'instrumentalness',
+                       'liveness', 'valence', 'tempo']
         
         if not all(feature in df.columns for feature in feature_list):
             st.error("Error: Not all required features are present in the DataFrame.")
             return None
 
         # Extract features and normalize
-        df_features = df[feature_list].copy()
+        df_features = df[feature_list]
         scaler = MinMaxScaler()
         df_features = pd.DataFrame(scaler.fit_transform(df_features), columns=feature_list)
-        
-        # Apply feature weights
-        for feature, weight in feature_weights.items():
-            df_features[feature] = df_features[feature] * weight
 
         return df, df_features, all_genres
 
     except Exception as e:
         st.error(f"Error preprocessing data: {e}")
-        import traceback
-        st.error(traceback.format_exc())
         return None
 
 def calculate_similarity(df_features):
     try:
-        # Calculate cosine similarity
         similarity_matrix = cosine_similarity(df_features)
-        
-        # Apply additional similarity adjustments
-        for i in range(len(similarity_matrix)):
-            for j in range(i+1, len(similarity_matrix)):
-                # Get the features for both songs
-                song1 = df_features.iloc[i]
-                song2 = df_features.iloc[j]
-                
-                # Calculate key similarity (considering circle of fifths)
-                key_diff = min(abs(song1['key'] - song2['key']), 12 - abs(song1['key'] - song2['key']))
-                key_similarity = 1 - (key_diff / 6)
-                
-                # Calculate tempo similarity using Gaussian function
-                tempo_diff = abs(song1['tempo'] - song2['tempo'])
-                tempo_similarity = np.exp(-(tempo_diff ** 2) / (2 * (20 ** 2)))
-                
-                # Adjust similarity score
-                similarity_matrix[i, j] = similarity_matrix[i, j] * (0.7 + 0.15 * key_similarity + 0.15 * tempo_similarity)
-                similarity_matrix[j, i] = similarity_matrix[i, j]  # Make matrix symmetric
-        
         return similarity_matrix
     except Exception as e:
         st.error(f"Error calculating similarity: {e}")
@@ -230,7 +184,7 @@ def recommend_songs(song_name, artist_name, df, similarity_matrix, num_recommend
             st.warning(f"Song '{song_name}' by '{artist_name}' not found in the dataset.")
             return None
 
-        # If multiple matches, use the first one
+        # If multiple matches, use the first one.
         selected_song_index = matching_songs.index[0]
         
         # Verify the index is within bounds
@@ -274,24 +228,18 @@ def recommend_songs(song_name, artist_name, df, similarity_matrix, num_recommend
             yt_link = get_youtube_search_url(rec_song, rec_artist)
             preview_url = get_preview_url(rec_song, rec_artist)
             
-            # Calculate additional similarity metrics
-            song_features = df.iloc[idx]
-            selected_features = df.iloc[selected_song_index]
+            # Make sure to round the similarity score for display
+            # Using 4 decimal places to show variation
             
-            # Calculate genre similarity
-            genre_similarity = len(set(song_features['genres']) & set(selected_features['genres'])) / len(set(song_features['genres']) | set(selected_features['genres']))
-            
-            # Calculate overall similarity score
-            overall_similarity = similarity_scores[idx] * (0.7 + 0.3 * genre_similarity)
-            
+            score = similarity_scores[idx]
             recommendations.append({
                 'song': rec_song,
                 'artist': rec_artist,
                 'youtube_link': yt_link,
                 'artwork_url': artwork_url,
                 'preview_url': preview_url,
-                'similarity_score': round(float(overall_similarity), 4),
-                'genre_similarity': round(float(genre_similarity), 4)
+                'similarity_score': round(float(score), 4),
+                'raw_score': score  # Add raw score for deeper debug
             })
         
         return {
@@ -460,15 +408,6 @@ def main():
         font-size: 0.8em;
         margin-top: 5px;
     }
-    .genre-badge {
-        background-color: #f1f8e9;
-        color: #689f38;
-        padding: 5px 10px;
-        border-radius: 15px;
-        font-size: 0.8em;
-        margin-right: 5px;
-        display: inline-block;
-    }
     .preview-container {
         margin-top: 15px;
         padding: 10px;
@@ -594,6 +533,8 @@ def main():
                             </audio>
                         </div>
                         """.format(selected['preview_url']), unsafe_allow_html=True)
+                    else:
+                        st.info("No audio preview available for this song.")
                     
                     st.markdown("---")
                     
@@ -617,17 +558,13 @@ def main():
                                 <div class='similarity-badge'>
                                     Similarity Score: {:.4f}
                                 </div>
-                                <div class='similarity-badge' style="background-color: #f1f8e9; color: #689f38;">
-                                    Genre Similarity: {:.4f}
-                                </div>
                             </div>
                             """.format(
                                 rec['artwork_url'],
                                 rec['song'],
                                 rec['artist'],
                                 rec['youtube_link'],
-                                rec['similarity_score'],
-                                rec['genre_similarity']
+                                rec['similarity_score']
                             ), unsafe_allow_html=True)
                             
                             if rec['preview_url']:
