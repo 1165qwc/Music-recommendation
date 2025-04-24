@@ -380,39 +380,100 @@ def main():
     # Add custom CSS for better styling
     st.markdown("""
     <style>
+    /* Light mode colors */
+    :root {
+        --card-bg-light: #f8f9fa;
+        --card-shadow-light: rgba(0,0,0,0.1);
+        --card-shadow-hover-light: rgba(0,0,0,0.2);
+        --text-color-light: #333333;
+        --preview-bg-light: #f5f5f5;
+        --badge-bg-light: #e3f2fd;
+        --badge-text-light: #1976d2;
+    }
+
+    /* Dark mode colors */
+    @media (prefers-color-scheme: dark) {
+        :root {
+            --card-bg-light: #2d2d2d;
+            --card-shadow-light: rgba(0,0,0,0.3);
+            --card-shadow-hover-light: rgba(0,0,0,0.4);
+            --text-color-light: #ffffff;
+            --preview-bg-light: #1a1a1a;
+            --badge-bg-light: #1a237e;
+            --badge-text-light: #bbdefb;
+        }
+    }
+
     .song-card {
-        background-color: #f8f9fa;
+        background-color: var(--card-bg-light);
         border-radius: 10px;
         padding: 20px;
         margin-bottom: 20px;
-        box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        box-shadow: 0 2px 5px var(--card-shadow-light);
         transition: transform 0.2s;
+        color: var(--text-color-light);
     }
+
     .song-card:hover {
         transform: translateY(-5px);
-        box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+        box-shadow: 0 4px 8px var(--card-shadow-hover-light);
     }
+
     .song-header {
         display: flex;
         align-items: center;
         margin-bottom: 15px;
     }
+
     .song-info {
         margin-left: 15px;
     }
+
+    .song-info h3, .song-info h4 {
+        color: var(--text-color-light);
+        margin: 0;
+    }
+
+    .song-info p {
+        color: var(--text-color-light);
+        opacity: 0.8;
+        margin: 5px 0;
+    }
+
+    .song-info a {
+        color: #1db954;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+    }
+
+    .song-info a:hover {
+        text-decoration: underline;
+    }
+
     .similarity-badge {
-        background-color: #e3f2fd;
-        color: #1976d2;
+        background-color: var(--badge-bg-light);
+        color: var(--badge-text-light);
         padding: 5px 10px;
         border-radius: 15px;
         font-size: 0.8em;
         margin-top: 5px;
+        display: inline-block;
     }
+
     .preview-container {
         margin-top: 15px;
         padding: 10px;
-        background-color: #f5f5f5;
+        background-color: var(--preview-bg-light);
         border-radius: 5px;
+    }
+
+    /* Style the audio player for dark mode */
+    @media (prefers-color-scheme: dark) {
+        audio {
+            filter: invert(1) hue-rotate(180deg);
+        }
     }
     </style>
     """, unsafe_allow_html=True)
