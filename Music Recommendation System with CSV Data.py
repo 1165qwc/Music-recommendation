@@ -827,34 +827,6 @@ def main():
                     st.session_state.playlist_updated = True
                     
                     st.success(f"Added '{song_name}' by {artist_name} to your playlist!")
-                    
-                    # Display the updated playlist immediately
-                    st.subheader("Your Playlist")
-                    cols = st.columns(2)
-                    for i, song in enumerate(st.session_state.playlist):
-                        with cols[i % 2]:
-                            st.markdown("<div class='song-card'>", unsafe_allow_html=True)
-                            st.image(song['artwork_url'], width=150)
-                            st.markdown(f"### {song['song']}")
-                            st.markdown(f"*Artist:* {song['artist']}")
-                            st.markdown(f"[Listen on YouTube Music]({song['youtube_link']})")
-                            
-                            # Add audio preview if available
-                            if song['preview_url']:
-                                st.audio(song['preview_url'])
-                            
-                            # Add remove button for each song
-                            if st.button(f"Remove", key=f"remove_{i}"):
-                                st.session_state.playlist.pop(i)
-                                st.session_state.playlist_updated = True
-                                if st.session_state.playlist:
-                                    st.session_state.current_song = st.session_state.playlist[-1]['song']
-                                    st.session_state.current_artist = st.session_state.playlist[-1]['artist']
-                                else:
-                                    st.session_state.current_song = None
-                                    st.session_state.current_artist = None
-                            
-                            st.markdown("</div>", unsafe_allow_html=True)
                 else:
                     st.warning(f"'{song_name}' by {artist_name} is already in your playlist.")
             else:
@@ -898,7 +870,6 @@ def main():
                 st.session_state.current_artist = None
                 st.session_state.playlist_search_query = ""
                 st.session_state.playlist_updated = True
-                st.session_state.force_rerun = not st.session_state.get('force_rerun', False)
         
         # Get recommendations for the next song in the playlist
         if st.session_state.current_song and st.session_state.current_artist:
@@ -928,23 +899,11 @@ def main():
                                 song_exists = any(item['song'] == rec['song'] and item['artist'] == rec['artist'] for item in st.session_state.playlist)
                                 
                                 if not song_exists:
-                                    # Add to playlist
-                                    st.session_state.playlist.append({
-                                        'song': rec['song'],
-                                        'artist': rec['artist'],
-                                        'youtube_link': rec['youtube_link'],
-                                        'artwork_url': rec['artwork_url'],
-                                        'preview_url': rec['preview_url']
-                                    })
-                                    
-                                    # Update current song and mark playlist as updated
+                                    st.session_state.playlist.append(rec)
                                     st.session_state.current_song = rec['song']
                                     st.session_state.current_artist = rec['artist']
                                     st.session_state.playlist_updated = True
-                                    
                                     st.success(f"Added '{rec['song']}' by {rec['artist']} to your playlist!")
-                                    # Force a rerun by updating a dummy session state variable
-                                    st.session_state.force_rerun = not st.session_state.get('force_rerun', False)
                                 else:
                                     st.warning(f"'{rec['song']}' by {rec['artist']} is already in your playlist.")
                             
