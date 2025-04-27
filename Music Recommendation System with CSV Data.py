@@ -827,6 +827,7 @@ def main():
                     st.session_state.playlist_updated = True
                     
                     st.success(f"Added '{song_name}' by {artist_name} to your playlist!")
+                    st.experimental_rerun()
                 else:
                     st.warning(f"'{song_name}' by {artist_name} is already in your playlist.")
             else:
@@ -903,7 +904,8 @@ def main():
                                     st.session_state.current_song = rec['song']
                                     st.session_state.current_artist = rec['artist']
                                     st.session_state.playlist_updated = True
-                                    st.toast(f"Added '{rec['song']}' by {rec['artist']} to your playlist!")
+                                    st.success(f"Added '{rec['song']}' by {rec['artist']} to your playlist!")
+                                    st.experimental_rerun()
                                 else:
                                     st.warning(f"'{rec['song']}' by {rec['artist']} is already in your playlist.")
                             
