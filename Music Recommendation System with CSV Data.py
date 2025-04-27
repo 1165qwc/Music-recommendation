@@ -836,12 +836,6 @@ def main():
         if st.session_state.playlist:
             st.subheader("Your Playlist")
             
-            # Debug information
-            st.sidebar.write(f"Playlist length: {len(st.session_state.playlist)}")
-            st.sidebar.write("Current playlist songs:")
-            for song in st.session_state.playlist:
-                st.sidebar.write(f"- {song['song']} by {song['artist']}")
-            
             # Create a grid layout for the playlist
             cols = st.columns(2)
             for i, song in enumerate(st.session_state.playlist):
@@ -866,7 +860,6 @@ def main():
                         else:
                             st.session_state.current_song = None
                             st.session_state.current_artist = None
-                        st.experimental_rerun()  # Force a rerun to update the display
                     
                     st.markdown("</div>", unsafe_allow_html=True)
             
