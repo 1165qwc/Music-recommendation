@@ -205,7 +205,7 @@ def recommend_songs(song_name, artist_name, df, similarity_matrix, num_recommend
         similar_song_indices = [idx for idx in similar_song_indices if idx != selected_song_index and idx < len(df)]
         
         # Get the top N recommendations (or fewer if not enough similar songs)
-        top_n_indices = similar_song_indices[:min(num_recommendations * 2, len(similar_song_indices))]
+        top_n_indices = similar_song_indices[:min(num_recommendations, len(similar_song_indices))]
         
         # Get iTunes artwork and YouTube link for selected song
         selected_artwork = get_itunes_artwork(selected_song, selected_artist)
@@ -222,10 +222,6 @@ def recommend_songs(song_name, artist_name, df, similarity_matrix, num_recommend
         for idx in top_n_indices:
             rec_song = df.iloc[idx]['song']
             rec_artist = df.iloc[idx]['artist']
-            
-            # Skip if this song has already been recommended
-            if (rec_song, rec_artist) in st.session_state.recommended_songs:
-                continue
             
             # Get artwork, YouTube link, and preview URL
             artwork_url = get_itunes_artwork(rec_song, rec_artist)
@@ -245,13 +241,6 @@ def recommend_songs(song_name, artist_name, df, similarity_matrix, num_recommend
                 'similarity_score': round(float(score), 4),
                 'raw_score': score  # Add raw score for deeper debug
             })
-            
-            # Add to recommended songs set
-            st.session_state.recommended_songs.add((rec_song, rec_artist))
-            
-            # Stop if we have enough unique recommendations
-            if len(recommendations) >= num_recommendations:
-                break
         
         return {
             'selected': {
@@ -301,17 +290,13 @@ def get_popular_songs_by_genre(df, genre, num_recommendations=10):
         genre_songs['popularity_score'] = popularity_scores
         
         # Sort by popularity score and get top N
-        top_songs = genre_songs.nlargest(num_recommendations * 2, 'popularity_score')
+        top_songs = genre_songs.nlargest(num_recommendations, 'popularity_score')
         
         # Get artwork and YouTube links for each song
         recommendations = []
         for _, song in top_songs.iterrows():
             song_name = song['song']
             artist_name = song['artist']
-            
-            # Skip if this song has already been recommended
-            if (song_name, artist_name) in st.session_state.recommended_songs:
-                continue
             
             # Get artwork, YouTube link, and preview URL
             artwork_url = get_itunes_artwork(song_name, artist_name)
@@ -327,13 +312,6 @@ def get_popular_songs_by_genre(df, genre, num_recommendations=10):
                 'popularity_score': round(float(song['popularity_score']), 4),
                 'genre': genre
             })
-            
-            # Add to recommended songs set
-            st.session_state.recommended_songs.add((song_name, artist_name))
-            
-            # Stop if we have enough unique recommendations
-            if len(recommendations) >= num_recommendations:
-                break
             
         return recommendations
         
@@ -398,10 +376,6 @@ def create_playlist_step(df, similarity_matrix, current_song, current_artist, nu
 def main():
     st.title("Music Recommendation System")
     st.write("This app recommends similar songs based on your input!")
-    
-    # Initialize session state for tracking recommended songs
-    if 'recommended_songs' not in st.session_state:
-        st.session_state.recommended_songs = set()
     
     # Add custom CSS for better styling
     st.markdown("""
@@ -971,9 +945,6 @@ def main():
                             st.markdown("</div>", unsafe_allow_html=True)
                             st.markdown(f"*Similarity Score:* {rec['similarity_score']:.5f}")
 
-# Add a function to reset recommended songs when clearing playlist
-def reset_recommended_songs():
-    st.session_state.recommended_songs = set()
 
 if __name__ == "__main__":
     main()
