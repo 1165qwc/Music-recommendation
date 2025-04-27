@@ -899,11 +899,22 @@ def main():
                                 song_exists = any(item['song'] == rec['song'] and item['artist'] == rec['artist'] for item in st.session_state.playlist)
                                 
                                 if not song_exists:
-                                    st.session_state.playlist.append(rec)
+                                    # Add to playlist
+                                    st.session_state.playlist.append({
+                                        'song': rec['song'],
+                                        'artist': rec['artist'],
+                                        'youtube_link': rec['youtube_link'],
+                                        'artwork_url': rec['artwork_url'],
+                                        'preview_url': rec['preview_url']
+                                    })
+                                    
+                                    # Update current song and mark playlist as updated
                                     st.session_state.current_song = rec['song']
                                     st.session_state.current_artist = rec['artist']
                                     st.session_state.playlist_updated = True
+                                    
                                     st.success(f"Added '{rec['song']}' by {rec['artist']} to your playlist!")
+                                    st.experimental_rerun()  # Refresh the page to show updated playlist and recommendations
                                 else:
                                     st.warning(f"'{rec['song']}' by {rec['artist']} is already in your playlist.")
                             
