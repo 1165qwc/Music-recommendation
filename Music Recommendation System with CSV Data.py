@@ -877,12 +877,13 @@ def main():
                     st.markdown("</div>", unsafe_allow_html=True)
             
             # Button to clear the playlist
-            if st.button("Clear Playlist"):
+            if st.button("Clear Playlist", key="clear_playlist"):
                 st.session_state.playlist = []
                 st.session_state.current_song = None
                 st.session_state.current_artist = None
                 st.session_state.playlist_search_query = ""
                 st.session_state.playlist_updated = True
+                st.rerun()  # Refresh the display immediately after clearing
         
         # Get recommendations for the next song in the playlist
         if st.session_state.playlist:
