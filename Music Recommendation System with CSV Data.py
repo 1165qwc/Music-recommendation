@@ -765,7 +765,7 @@ def main():
     with tab4:
         st.subheader("Create Your Playlist")
         
-        # Initialize session state for playlist if not already present
+        # Initialize all session state variables for the playlist tab
         if 'playlist' not in st.session_state:
             st.session_state.playlist = []
         if 'current_song' not in st.session_state:
@@ -776,6 +776,10 @@ def main():
             st.session_state.playlist_search_query = ""
         if 'playlist_updated' not in st.session_state:
             st.session_state.playlist_updated = False
+        if 'playlist_song_search' not in st.session_state:
+            st.session_state.playlist_song_search = ""
+        if 'playlist_artist_input' not in st.session_state:
+            st.session_state.playlist_artist_input = ""
         
         # Create two columns for the search interface
         col1, col2 = st.columns([3, 1])
@@ -873,6 +877,7 @@ def main():
                         else:
                             st.session_state.current_song = None
                             st.session_state.current_artist = None
+                        st.rerun()
                     
                     st.markdown("</div>", unsafe_allow_html=True)
             
@@ -883,9 +888,9 @@ def main():
                 st.session_state.current_artist = None
                 st.session_state.playlist_search_query = ""
                 st.session_state.playlist_updated = True
-                st.session_state.song_search = ""  # Clear the song search field
-                st.session_state.artist_input = ""  # Clear the artist input field
-                st.rerun()  # Refresh the display immediately after clearing
+                st.session_state.playlist_song_search = ""
+                st.session_state.playlist_artist_input = ""
+                st.rerun()
         
         # Get recommendations for the next song in the playlist
         if st.session_state.playlist:
@@ -940,8 +945,6 @@ def main():
                                     st.session_state.playlist_updated = True
                                     st.success(f"Added '{rec['song']}' by {rec['artist']} to your playlist!")
                                     st.rerun()  # Refresh the display to show the updated playlist
-                                else:
-                                    st.warning(f"'{rec['song']}' by {rec['artist']} is already in your playlist.")
                             
                             st.markdown("</div>", unsafe_allow_html=True)
                             st.markdown(f"*Similarity Score:* {rec['similarity_score']:.5f}")
