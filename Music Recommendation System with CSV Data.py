@@ -826,37 +826,7 @@ def main():
                     st.session_state.current_artist = artist_name
                     st.session_state.playlist_updated = True
                     
-                    # Display success message and force immediate display of playlist
                     st.success(f"Added '{song_name}' by {artist_name} to your playlist!")
-                    
-                    # Display the current playlist immediately
-                    st.subheader("Your Playlist")
-                    cols = st.columns(2)
-                    for i, song in enumerate(st.session_state.playlist):
-                        with cols[i % 2]:
-                            st.markdown("<div class='song-card'>", unsafe_allow_html=True)
-                            st.image(song['artwork_url'], width=150)
-                            st.markdown(f"### {song['song']}")
-                            st.markdown(f"*Artist:* {song['artist']}")
-                            st.markdown(f"[Listen on YouTube Music]({song['youtube_link']})")
-                            
-                            if song['preview_url']:
-                                st.audio(song['preview_url'])
-                            
-                            if st.button(f"Remove", key=f"remove_{i}"):
-                                st.session_state.playlist.pop(i)
-                                st.session_state.playlist_updated = True
-                                if st.session_state.playlist:
-                                    st.session_state.current_song = st.session_state.playlist[-1]['song']
-                                    st.session_state.current_artist = st.session_state.playlist[-1]['artist']
-                                else:
-                                    st.session_state.current_song = None
-                                    st.session_state.current_artist = None
-                            
-                            st.markdown("</div>", unsafe_allow_html=True)
-                    
-                    # Force a rerun by updating a dummy session state variable
-                    st.session_state.force_rerun = not st.session_state.get('force_rerun', False)
                 else:
                     st.warning(f"'{song_name}' by {artist_name} is already in your playlist.")
             else:
@@ -943,35 +913,7 @@ def main():
                                     st.session_state.current_artist = rec['artist']
                                     st.session_state.playlist_updated = True
                                     
-                                    # Display success message and force immediate display of playlist
                                     st.success(f"Added '{rec['song']}' by {rec['artist']} to your playlist!")
-                                    
-                                    # Display the current playlist immediately
-                                    st.subheader("Your Playlist")
-                                    cols = st.columns(2)
-                                    for i, song in enumerate(st.session_state.playlist):
-                                        with cols[i % 2]:
-                                            st.markdown("<div class='song-card'>", unsafe_allow_html=True)
-                                            st.image(song['artwork_url'], width=150)
-                                            st.markdown(f"### {song['song']}")
-                                            st.markdown(f"*Artist:* {song['artist']}")
-                                            st.markdown(f"[Listen on YouTube Music]({song['youtube_link']})")
-                                            
-                                            if song['preview_url']:
-                                                st.audio(song['preview_url'])
-                                            
-                                            if st.button(f"Remove", key=f"remove_{i}"):
-                                                st.session_state.playlist.pop(i)
-                                                st.session_state.playlist_updated = True
-                                                if st.session_state.playlist:
-                                                    st.session_state.current_song = st.session_state.playlist[-1]['song']
-                                                    st.session_state.current_artist = st.session_state.playlist[-1]['artist']
-                                                else:
-                                                    st.session_state.current_song = None
-                                                    st.session_state.current_artist = None
-                                            
-                                            st.markdown("</div>", unsafe_allow_html=True)
-                                    
                                     # Force a rerun by updating a dummy session state variable
                                     st.session_state.force_rerun = not st.session_state.get('force_rerun', False)
                                 else:
