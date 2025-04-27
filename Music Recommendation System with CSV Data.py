@@ -914,7 +914,8 @@ def main():
                                     st.session_state.playlist_updated = True
                                     
                                     st.success(f"Added '{rec['song']}' by {rec['artist']} to your playlist!")
-                                    st.experimental_rerun()  # Refresh the page to show updated playlist and recommendations
+                                    # Force a rerun by updating a dummy session state variable
+                                    st.session_state.force_rerun = not st.session_state.get('force_rerun', False)
                                 else:
                                     st.warning(f"'{rec['song']}' by {rec['artist']} is already in your playlist.")
                             
