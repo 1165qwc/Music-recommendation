@@ -776,11 +776,9 @@ def main():
             st.session_state.playlist_search_query = ""
         if 'playlist_updated' not in st.session_state:
             st.session_state.playlist_updated = False
-        if 'form_reset' not in st.session_state:
-            st.session_state.form_reset = False
         
         # Create a form for the search interface
-        with st.form("playlist_form", clear_on_submit=True):
+        with st.form("playlist_form"):
             # Create two columns for the search interface
             col1, col2 = st.columns([3, 1])
             
@@ -888,7 +886,6 @@ def main():
                 st.session_state.current_artist = None
                 st.session_state.playlist_search_query = ""
                 st.session_state.playlist_updated = True
-                st.session_state.form_reset = True
                 st.rerun()
         
         # Get recommendations for the next song in the playlist
