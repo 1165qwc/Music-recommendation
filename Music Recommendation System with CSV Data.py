@@ -765,7 +765,7 @@ def main():
     with tab4:
         st.subheader("Create Your Playlist")
         
-        # Initialize all session state variables for the playlist tab
+        # Initialize session state for playlist if not already present
         if 'playlist' not in st.session_state:
             st.session_state.playlist = []
         if 'current_song' not in st.session_state:
@@ -776,78 +776,76 @@ def main():
             st.session_state.playlist_search_query = ""
         if 'playlist_updated' not in st.session_state:
             st.session_state.playlist_updated = False
-        if 'playlist_song_search' not in st.session_state:
-            st.session_state.playlist_song_search = ""
-        if 'playlist_artist_input' not in st.session_state:
-            st.session_state.playlist_artist_input = ""
         
-        # Create two columns for the search interface
-        col1, col2 = st.columns([3, 1])
-        
-        with col1:
-            # Get all song names for autocomplete
-            all_songs = [f"{row['song']} - {row['artist']}" for _, row in df.iterrows()]
+        # Create a form for the search interface
+        with st.form("playlist_form"):
+            # Create two columns for the search interface
+            col1, col2 = st.columns([3, 1])
             
-            # Use selectbox for song search with autocomplete
-            search_query = st.selectbox(
-                "Search for a song to start your playlist:",
-                options=[""] + all_songs,
-                key="playlist_song_search"
-            )
-            
-            # Update session state
-            st.session_state.playlist_search_query = search_query
-            
-            # If a song is selected, extract song name and artist
-            if search_query:
-                parts = search_query.split(" - ", 1)
-                if len(parts) == 2:
-                    st.session_state.current_song = parts[0]
-                    st.session_state.current_artist = parts[1]
-        
-        with col2:
-            # Optional artist name input (pre-filled if selected from autocomplete)
-            artist_name = st.text_input(
-                "Artist name (optional):", 
-                value=st.session_state.current_artist if st.session_state.current_artist else "",
-                key="playlist_artist_input"
-            )
-            num_recommendations = st.slider("Number of recommendations per step:", 3, 10, 5, key="playlist_recommendations")
-        
-        # Button to start or continue building the playlist
-        if st.button("Add Song to Playlist"):
-            # Use the selected song from autocomplete if available
-            song_name = st.session_state.current_song if st.session_state.current_song else search_query.split(" - ")[0] if search_query else None
-            
-            if song_name:
-                # Add the song to the playlist if it's not already there
-                song_exists = any(item['song'] == song_name and item['artist'] == artist_name for item in st.session_state.playlist)
+            with col1:
+                # Get all song names for autocomplete
+                all_songs = [f"{row['song']} - {row['artist']}" for _, row in df.iterrows()]
                 
-                if not song_exists:
-                    # Get artwork, YouTube link, and preview URL
-                    artwork_url = get_itunes_artwork(song_name, artist_name)
-                    yt_link = get_youtube_search_url(song_name, artist_name)
-                    preview_url = get_preview_url(song_name, artist_name)
+                # Use selectbox for song search with autocomplete
+                search_query = st.selectbox(
+                    "Search for a song to start your playlist:",
+                    options=[""] + all_songs,
+                    key="playlist_song_search"
+                )
+                
+                # Update session state
+                st.session_state.playlist_search_query = search_query
+                
+                # If a song is selected, extract song name and artist
+                if search_query:
+                    parts = search_query.split(" - ", 1)
+                    if len(parts) == 2:
+                        st.session_state.current_song = parts[0]
+                        st.session_state.current_artist = parts[1]
+            
+            with col2:
+                # Optional artist name input (pre-filled if selected from autocomplete)
+                artist_name = st.text_input(
+                    "Artist name (optional):", 
+                    value=st.session_state.current_artist if st.session_state.current_artist else "",
+                    key="playlist_artist_input"
+                )
+                num_recommendations = st.slider("Number of recommendations per step:", 3, 10, 5, key="playlist_recommendations")
+            
+            # Button to start or continue building the playlist
+            if st.form_submit_button("Add Song to Playlist"):
+                # Use the selected song from autocomplete if available
+                song_name = st.session_state.current_song if st.session_state.current_song else search_query.split(" - ")[0] if search_query else None
+                
+                if song_name:
+                    # Add the song to the playlist if it's not already there
+                    song_exists = any(item['song'] == song_name and item['artist'] == artist_name for item in st.session_state.playlist)
                     
-                    # Add to playlist
-                    st.session_state.playlist.append({
-                        'song': song_name,
-                        'artist': artist_name,
-                        'youtube_link': yt_link,
-                        'artwork_url': artwork_url,
-                        'preview_url': preview_url
-                    })
-                    
-                    # Update current song and mark playlist as updated
-                    st.session_state.current_song = song_name
-                    st.session_state.current_artist = artist_name
-                    st.session_state.playlist_updated = True
-                    
-                    st.success(f"Added '{song_name}' by {artist_name} to your playlist!")
+                    if not song_exists:
+                        # Get artwork, YouTube link, and preview URL
+                        artwork_url = get_itunes_artwork(song_name, artist_name)
+                        yt_link = get_youtube_search_url(song_name, artist_name)
+                        preview_url = get_preview_url(song_name, artist_name)
+                        
+                        # Add to playlist
+                        st.session_state.playlist.append({
+                            'song': song_name,
+                            'artist': artist_name,
+                            'youtube_link': yt_link,
+                            'artwork_url': artwork_url,
+                            'preview_url': preview_url
+                        })
+                        
+                        # Update current song and mark playlist as updated
+                        st.session_state.current_song = song_name
+                        st.session_state.current_artist = artist_name
+                        st.session_state.playlist_updated = True
+                        
+                        st.success(f"Added '{song_name}' by {artist_name} to your playlist!")
+                    else:
+                        st.warning(f"'{song_name}' by {artist_name} is already in your playlist.")
                 else:
-                    st.warning(f"'{song_name}' by {artist_name} is already in your playlist.")
-            else:
-                st.warning("Please select a song from the dropdown.")
+                    st.warning("Please select a song from the dropdown.")
         
         # Display the current playlist
         if st.session_state.playlist:
@@ -888,8 +886,6 @@ def main():
                 st.session_state.current_artist = None
                 st.session_state.playlist_search_query = ""
                 st.session_state.playlist_updated = True
-                st.session_state.playlist_song_search = ""
-                st.session_state.playlist_artist_input = ""
                 st.rerun()
         
         # Get recommendations for the next song in the playlist
