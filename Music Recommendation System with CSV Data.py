@@ -205,7 +205,7 @@ def recommend_songs(song_name, artist_name, df, similarity_matrix, num_recommend
         similar_song_indices = [idx for idx in similar_song_indices if idx != selected_song_index and idx < len(df)]
         
         # Get the top N recommendations (or fewer if not enough similar songs)
-        top_n_indices = similar_song_indices[:min(num_recommendations, len(similar_song_indices))]
+        top_n_indices = similar_song_indices[:min(num_recommendations * 2, len(similar_song_indices))]
         
         # Get iTunes artwork and YouTube link for selected song
         selected_artwork = get_itunes_artwork(selected_song, selected_artist)
@@ -218,10 +218,20 @@ def recommend_songs(song_name, artist_name, df, similarity_matrix, num_recommend
         st.sidebar.write(f"Min: {min(unique_scores):.4f}, Max: {max(unique_scores):.4f}")
         st.sidebar.write(f"Unique scores: {len(unique_scores)}")
         
+        # Track unique songs to avoid duplicates
+        seen_songs = set()
         recommendations = []
+        
         for idx in top_n_indices:
             rec_song = df.iloc[idx]['song']
             rec_artist = df.iloc[idx]['artist']
+            
+            # Skip if we've already seen this song-artist combination
+            song_key = f"{rec_song.lower()}_{rec_artist.lower()}"
+            if song_key in seen_songs:
+                continue
+                
+            seen_songs.add(song_key)
             
             # Get artwork, YouTube link, and preview URL
             artwork_url = get_itunes_artwork(rec_song, rec_artist)
@@ -241,6 +251,10 @@ def recommend_songs(song_name, artist_name, df, similarity_matrix, num_recommend
                 'similarity_score': round(float(score), 4),
                 'raw_score': score  # Add raw score for deeper debug
             })
+            
+            # Stop if we have enough unique recommendations
+            if len(recommendations) >= num_recommendations:
+                break
         
         return {
             'selected': {
