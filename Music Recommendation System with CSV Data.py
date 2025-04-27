@@ -603,9 +603,22 @@ def main():
                     # Display recommendations
                     st.markdown("### Recommended Songs")
                     
+                    # Filter out songs that are already in the playlist
+                    filtered_recommendations = [
+                        rec for rec in recommendations 
+                        if not any(
+                            item['song'] == rec['song'] and item['artist'] == rec['artist'] 
+                            for item in st.session_state.playlist
+                        )
+                    ]
+                    
+                    if not filtered_recommendations:
+                        st.info("No new recommendations available. All similar songs are already in your playlist.")
+                        return
+                    
                     # Create a grid layout for recommendations
                     cols = st.columns(2)
-                    for i, rec in enumerate(recommendations):
+                    for i, rec in enumerate(filtered_recommendations):
                         with cols[i % 2]:
                             st.markdown("""
                             <div class='song-card'>
@@ -881,9 +894,22 @@ def main():
                 if recommendations:
                     st.subheader("Recommended Next Songs")
                     
+                    # Filter out songs that are already in the playlist
+                    filtered_recommendations = [
+                        rec for rec in recommendations 
+                        if not any(
+                            item['song'] == rec['song'] and item['artist'] == rec['artist'] 
+                            for item in st.session_state.playlist
+                        )
+                    ]
+                    
+                    if not filtered_recommendations:
+                        st.info("No new recommendations available. All similar songs are already in your playlist.")
+                        return
+                    
                     # Create a grid layout for recommendations
                     cols = st.columns(2)
-                    for i, rec in enumerate(recommendations):
+                    for i, rec in enumerate(filtered_recommendations):
                         with cols[i % 2]:
                             st.markdown("<div class='song-card'>", unsafe_allow_html=True)
                             st.image(rec['artwork_url'], width=150)
