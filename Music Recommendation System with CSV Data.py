@@ -904,12 +904,12 @@ def main():
                                     st.session_state.current_artist = rec['artist']
                                     st.session_state.playlist_updated = True
                                     st.success(f"Added '{rec['song']}' by {rec['artist']} to your playlist!")
+                                    st.experimental_rerun()  # Refresh the display to show the updated playlist
                                 else:
                                     st.warning(f"'{rec['song']}' by {rec['artist']} is already in your playlist.")
                             
                             st.markdown("</div>", unsafe_allow_html=True)
                             st.markdown(f"*Similarity Score:* {rec['similarity_score']:.5f}")
-                            st.experimental_rerun()
 
 
 if __name__ == "__main__":
