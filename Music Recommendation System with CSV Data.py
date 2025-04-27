@@ -903,7 +903,7 @@ def main():
                                     st.session_state.current_song = rec['song']
                                     st.session_state.current_artist = rec['artist']
                                     st.session_state.playlist_updated = True
-                                    st.success(f"Added '{rec['song']}' by {rec['artist']} to your playlist!")
+                                    st.toast(f"Added '{rec['song']}' by {rec['artist']} to your playlist!")
                                 else:
                                     st.warning(f"'{rec['song']}' by {rec['artist']} is already in your playlist.")
                             
