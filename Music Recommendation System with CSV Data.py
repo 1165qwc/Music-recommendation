@@ -883,6 +883,8 @@ def main():
                 st.session_state.current_artist = None
                 st.session_state.playlist_search_query = ""
                 st.session_state.playlist_updated = True
+                st.session_state.song_search = ""  # Clear the song search field
+                st.session_state.artist_input = ""  # Clear the artist input field
                 st.rerun()  # Refresh the display immediately after clearing
         
         # Get recommendations for the next song in the playlist
