@@ -872,9 +872,11 @@ def main():
                 st.session_state.playlist_updated = True
         
         # Get recommendations for the next song in the playlist
-        if st.session_state.current_song and st.session_state.current_artist:
+        if st.session_state.playlist:
+            # Get the last song in the playlist for recommendations
+            last_song = st.session_state.playlist[-1]
             with st.spinner("Finding recommendations for your next song..."):
-                recommendations = create_playlist_step(df, similarity_matrix, st.session_state.current_song, st.session_state.current_artist, num_recommendations)
+                recommendations = create_playlist_step(df, similarity_matrix, last_song['song'], last_song['artist'], num_recommendations)
                 
                 if recommendations:
                     st.subheader("Recommended Next Songs")
