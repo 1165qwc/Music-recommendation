@@ -889,7 +889,8 @@ def main():
             # Get the last song in the playlist for recommendations
             last_song = st.session_state.playlist[-1]
             with st.spinner("Finding recommendations for your next song..."):
-                recommendations = create_playlist_step(df, similarity_matrix, last_song['song'], last_song['artist'], num_recommendations)
+                # Fetch more recommendations initially to account for filtered ones
+                recommendations = create_playlist_step(df, similarity_matrix, last_song['song'], last_song['artist'], num_recommendations * 2)
                 
                 if recommendations:
                     st.subheader("Recommended Next Songs")
@@ -902,6 +903,9 @@ def main():
                             for item in st.session_state.playlist
                         )
                     ]
+                    
+                    # Take only the requested number of recommendations
+                    filtered_recommendations = filtered_recommendations[:num_recommendations]
                     
                     if not filtered_recommendations:
                         st.info("No new recommendations available. All similar songs are already in your playlist.")
